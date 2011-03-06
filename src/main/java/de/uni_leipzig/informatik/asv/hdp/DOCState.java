@@ -37,8 +37,8 @@ public class DOCState {
 	
 	public void defragment(int[] kOldToKNew) {
 	    int[] tOldToTNew = new int[numberOfTables];
-	    int t, newNumberOfTables;
-	    for (t = 0, newNumberOfTables = 0; t < numberOfTables; t++){
+	    int t, newNumberOfTables = 0;
+	    for (t = 0; t < numberOfTables; t++){
 	        if (wordCountByTable.get(t) > 0){
 	            tOldToTNew[t] = newNumberOfTables;
 	            tableToTopic.set(newNumberOfTables, kOldToKNew[tableToTopic.get(t)]);

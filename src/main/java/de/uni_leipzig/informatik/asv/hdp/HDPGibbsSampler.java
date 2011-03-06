@@ -110,8 +110,8 @@ public class HDPGibbsSampler {
 
 	private void defragment() {
 		int[] kOldToKNew = new int[numberOfTopics];
-		int k, newNumberOfTopics;
-		for (k = 0, newNumberOfTopics = 0; k < numberOfTopics; k++) {
+		int k, newNumberOfTopics = 0;
+		for (k = 0; k < numberOfTopics; k++) {
 			if (wordCountByTopic.get(k) > 0) {
 				kOldToKNew[k] = newNumberOfTopics;
 				Collections.swap(wordCountByTopic, newNumberOfTopics, k);
@@ -130,7 +130,7 @@ public class HDPGibbsSampler {
 	private void sampleWordAssignment(DOCState docState, int i, ArrayList<Double> q, ArrayList<Double> f) {	
 		int k, j;
 		double total_q = 0.0, f_k = 0.0, f_new, u;
-//		updateDocState(docState, i, -1, -1);
+		updateDocState(docState, i, -1, -1);
 		while (f.size() <= numberOfTopics)
 			f.add(0.0);
 		while (q.size() <= docState.numberOfTables)
