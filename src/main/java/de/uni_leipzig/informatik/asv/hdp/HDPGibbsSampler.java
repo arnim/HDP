@@ -8,8 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import javax.management.RuntimeErrorException;
-
 public class HDPGibbsSampler {
 
 	public int sizeOfVocabulary;
@@ -182,13 +180,6 @@ public class HDPGibbsSampler {
 		if (k < 0)
 				k = docState.tableToTopic.get(table);
 		docState.wordCountByTable.set(table, docState.wordCountByTable.get(table) + update);
-		try {
-			wordCountByTopic.set(k, wordCountByTopic.get(k) + update);
-
-		} catch (Exception e) {
-			System.err.println("k="+k+ " wordCountByTopic="+wordCountByTopic.size());
-			throw new RuntimeException(e);
-		}
 		wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] += update;
 		wordCountByTopicAndDocument.get(k)[docState.docID] += update;
 		if (update == -1 && docState.wordCountByTable.get(table) == 0) { 
@@ -197,7 +188,8 @@ public class HDPGibbsSampler {
 			docState.tableToTopic.set(table, docState.tableToTopic.get(table) - 1);
 		}
 		if (update == 1 && docState.wordCountByTable.get(table) == 1) { 
-			docState.numberOfTables++;
+			if (table == docState.numberOfTables)
+				docState.numberOfTables++;
 			docState.tableToTopic.set(table, k);
 			numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) + 1); 
 			totalNumberOfTables++;
