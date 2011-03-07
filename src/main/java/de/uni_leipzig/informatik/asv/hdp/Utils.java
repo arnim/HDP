@@ -22,11 +22,11 @@ class Utils {
 	}
 
 	public static void changeAtAbout(List<Integer> numTablesByZ, int position,
-			Integer about) {
+			int about) {
 		if (numTablesByZ.size() <= position)
 			numTablesByZ.add(about);
 		else {
-			Integer x = numTablesByZ.get(position);
+			int x = numTablesByZ.get(position);
 			numTablesByZ.set(position, x + about);
 		}
 	}

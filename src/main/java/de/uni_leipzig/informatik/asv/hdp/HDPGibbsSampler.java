@@ -25,6 +25,7 @@ public class HDPGibbsSampler {
 	private ArrayList<int[]> wordCountByTopicAndTerm;
 	
 	private Random random = new Random();
+	private ArrayList<Double> he;
 
 	public void initGibbsState(Corpus corpus) {
 		sizeOfVocabulary = corpus.sizeVocabulary;
@@ -152,9 +153,12 @@ public class HDPGibbsSampler {
 		total_q += alpha * f_new;
 		q.set(docState.numberOfTables, total_q);
 		u = random.nextDouble() * total_q;
+		he = q;
 		for (j = 0; j < docState.numberOfTables; j++)
-			if (u < q.get(j))
+			if (u < q.get(j)) 
 				break;	// decided which table the word i is assigned to
+		System.err.println("u="+u+"j="+j+"i="+i+"docID="+docState.docID);
+		System.err.println();
 		docState.words[i].tableAssignment = j;
 		if (j == docState.numberOfTables) {  // new table
 			while (q.size() <= numberOfTopics)
@@ -170,22 +174,32 @@ public class HDPGibbsSampler {
 			for (k = 0; k <= numberOfTopics; k++)
 				if (u < q.get(k))
 					break;
-			updateDocState(docState, i, +1, k);
+			updateDocState(docState, i, 1, k);
 		} else 
-			updateDocState(docState, i, +1, -1);
+			updateDocState(docState, i, 1, -1);
 	}
 
 	private void updateDocState(DOCState docState, int i, int update, int k) {
 		int table = docState.words[i].tableAssignment;
+		System.err.println("table="+table+ " i="+i);
+		int ko = k;
 		if (k < 0)
-				k = docState.tableToTopic.get(table);
+				k = docState.tableToTopic.get(table); 
 		docState.wordCountByTable.set(table, docState.wordCountByTable.get(table) + update);
-		wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] += update;
+		try {
+			int[] foo = wordCountByTopicAndTerm.get(k);
+			foo[docState.words[i].termIndex] += update;
+		} catch (Exception e) {
+
+			System.out.println();
+			// TODO: handle exception
+		}
+		
 		wordCountByTopicAndDocument.get(k)[docState.docID] += update;
 		if (update == -1 && docState.wordCountByTable.get(table) == 0) { 
 			totalNumberOfTables--; 
 			numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) - 1);
-			docState.tableToTopic.set(table, docState.tableToTopic.get(table) - 1);
+			docState.tableToTopic.set(table, - 1);
 		}
 		if (update == 1 && docState.wordCountByTable.get(table) == 1) { 
 			if (table == docState.numberOfTables)
@@ -198,6 +212,9 @@ public class HDPGibbsSampler {
 				docState.wordCountByTable.add(0);
 			}
 			if (k == numberOfTopics) {
+				if (wordCountByTopic.get(k)!=1)
+					System.err.println(wordCountByTopic.get(k)+ " ");
+				assert(wordCountByTopic.get(k)==1);
 				numberOfTopics++; 
 				if (numberOfTablesByTopic.size() < numberOfTopics + 1) {
 					numberOfTablesByTopic.add(0);
