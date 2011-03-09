@@ -22,9 +22,8 @@ public class GibbsState {
 	
 	
 	
-	protected void updateDocState(DOCState docState, int i, int update, int k) {
-//		System.out.println("-");
-		int table = docState.words[i].tableAssignment;
+	protected void updateDocState(DOCState docState, int i, int update, int table, int k) {
+		docState.words[i].tableAssignment = table;
 		if (k < 0)
 				k = docState.tableToTopic.get(table); 
 //		if (update < 0)
@@ -89,7 +88,7 @@ public class GibbsState {
 	}
 	
 	
-	protected void saveIteration(String name) throws FileNotFoundException  {
+	protected void saveState(String name) throws FileNotFoundException  {
 		PrintStream file = new PrintStream(name + "-topics.dat");
 		for (int k = 0; k < numberOfTopics; k++) {
 			for (int w = 0; w < sizeOfVocabulary; w++)

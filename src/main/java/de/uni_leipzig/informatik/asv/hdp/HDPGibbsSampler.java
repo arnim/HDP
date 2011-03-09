@@ -90,20 +90,45 @@ public class HDPGibbsSampler extends GibbsState {
 			}
 		}
 		DOCState docState;
+		int table;
 		ArrayList<Double> q = new ArrayList<Double>(), f = new ArrayList<Double>();
-		for (int j = 0; j < docStates.length; j++) {
-			docState = docStates[j];
-			for (int i = 0; i < docState.documentLength; i++) 
-				sampleWordAssignment(docState, i, q, f);
+		for (int d = 0; d < docStates.length; d++) {
+			docState = docStates[d];
+			for (int i = 0; i < docState.documentLength; i++) {
+				updateDocState(docState, i, -1, docState.words[i].tableAssignment, -1); // remove the word i from the state
+				table = sampleTable(docState, i, q, f);
+				if (table == docState.numberOfTables) // new Table
+					updateDocState(docState, i, 1, table, sampleTopic(docState, i, q, f));
+				updateDocState(docState, i, 1, table, -1);
+			}
 		}
 		defragment();
 	}
 
+	
+	
+	private int sampleTopic(DOCState docState, int i, ArrayList<Double> q, ArrayList<Double> f) {
+		double u, total_q = 0.0;
+		int k;
+		while (q.size() <= numberOfTopics)
+			q.add(0.0);
+		for (k = 0; k < numberOfTopics; k++) {
+			total_q += numberOfTablesByTopic.get(k) * f.get(k);
+			q.set(k, total_q);
+		}
+		total_q += gamma / sizeOfVocabulary;
+		q.set(numberOfTopics, total_q);
+		u = random.nextDouble() * total_q;
+		for (k = 0; k <= numberOfTopics; k++)
+			if (u < q.get(k))
+				break;
+		return k;
+	}
+	
 
-	private void sampleWordAssignment(DOCState docState, int i, ArrayList<Double> q, ArrayList<Double> f) {	
+	private int sampleTable(DOCState docState, int i, ArrayList<Double> q, ArrayList<Double> f) {	
 		int k, j;
 		double total_q = 0.0, f_k = 0.0, f_new, u;
-		updateDocState(docState, i, -1, -1);
 		while (f.size() <= numberOfTopics)
 			f.add(0.0);
 		while (q.size() <= docState.numberOfTables)
@@ -128,26 +153,7 @@ public class HDPGibbsSampler extends GibbsState {
 		for (j = 0; j < docState.numberOfTables; j++)
 			if (u < q.get(j)) 
 				break;	// decided which table the word i is assigned to
-//		System.err.println("u="+u+"j="+j+"i="+i+"docID="+docState.docID);
-//		System.err.println();
-		docState.words[i].tableAssignment = j;
-		if (j == docState.numberOfTables) {  // new table
-			while (q.size() <= numberOfTopics)
-				q.add(0.0);
-			total_q = 0.0;
-			for (k = 0; k < numberOfTopics; k++) {
-				total_q += numberOfTablesByTopic.get(k) * f.get(k);
-				q.set(k, total_q);
-			}
-			total_q += gamma / sizeOfVocabulary;
-			q.set(numberOfTopics, total_q);
-			u = random.nextDouble() * total_q;
-			for (k = 0; k <= numberOfTopics; k++)
-				if (u < q.get(k))
-					break;
-			updateDocState(docState, i, 1, k);
-		} else 
-			updateDocState(docState, i, 1, -1);
+		return j;
 	}
 
 
@@ -168,7 +174,7 @@ public class HDPGibbsSampler extends GibbsState {
 					+ gamma + ", alpha = " + alpha);
 
 			if (saveLag != -1 && (iter % saveLag == 0)) 
-				saveIteration(directory + "/" + iter);
+				saveState(directory + "/" + iter);
 		}
 		file.close(); 
 	}
