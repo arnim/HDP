@@ -17,7 +17,7 @@ public class GibbsState {
 	
 	protected int sizeOfVocabulary;
 	protected int totalNumberOfWords;
-	protected int numberOfTopics;
+	protected int numberOfTopics = 1;
 	protected int totalNumberOfTables;
 	
 	
@@ -37,7 +37,7 @@ public class GibbsState {
 			foo[docState.words[i].termIndex] += update;
 
 		} catch (Exception e) {
-			System.err.println(k);
+//			System.err.println(k);
 		}
 		wordCountByTopicAndDocument.get(k)[docState.docID] += update;
 		if (update == -1 && docState.wordCountByTable.get(table) == 0) { 
@@ -57,8 +57,8 @@ public class GibbsState {
 				docState.wordCountByTable.add(0);
 			}
 			if (k == numberOfTopics) {
-				if (wordCountByTopic.get(k)!=1)
-					System.err.println(wordCountByTopic.get(k)+ "--------!wordCountByTopic.get(k)==1 ");
+//				if (wordCountByTopic.get(k)!=1)
+//					System.err.println(wordCountByTopic.get(k)+ "--------!wordCountByTopic.get(k)==1 ");
 				numberOfTopics++; 
 				if (numberOfTablesByTopic.size() < numberOfTopics + 1) {
 					numberOfTablesByTopic.add(0);
@@ -76,7 +76,6 @@ public class GibbsState {
 		for (k = 0; k < numberOfTopics; k++) {
 			if (wordCountByTopic.get(k) > 0) {
 				kOldToKNew[k] = newNumberOfTopics;
-				Collections.swap(wordCountByTopic, newNumberOfTopics, k);
 				Collections.swap(wordCountByTopic, newNumberOfTopics, k);
 				Collections.swap(numberOfTablesByTopic, newNumberOfTopics, k);
 				Collections.swap(wordCountByTopicAndDocument, newNumberOfTopics, k);

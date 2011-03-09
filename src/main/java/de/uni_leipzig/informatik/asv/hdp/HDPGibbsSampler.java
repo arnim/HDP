@@ -11,11 +11,9 @@ import java.util.Random;
 public class HDPGibbsSampler extends GibbsState { 
 
 
-	public double eta;
-	public double gamma;
-	public double alpha;
-
-
+	public double eta  = 0.5; // default only
+	public double gamma = 1.0;
+	public double alpha = 1.0;
 	
 	private Random random = new Random();
 
@@ -24,7 +22,7 @@ public class HDPGibbsSampler extends GibbsState {
 		totalNumberOfWords = corpus.totalNumberOfWords;
 		docStates = new DOCState[corpus.docs.size()];
 		for (int d = 0; d < corpus.docs.size(); d++)
-			docStates[d] = new DOCState(corpus.docs.get(d));
+			docStates[d] = new DOCState(corpus.docs.get(d), d);
 		int k, i, j;
 		double prob, u;
 		double[] q = new double[numberOfTopics];
@@ -34,9 +32,9 @@ public class HDPGibbsSampler extends GibbsState {
 		wordCountByTopic = new ArrayList<Integer>();
 		wordCountByTopicAndDocument = new ArrayList<int[]>();
 		wordCountByTopicAndTerm = new ArrayList<int[]>();
-		for (k = 0; k <= numberOfTopics + 1; k++) {
-			numberOfTablesByTopic.add(k);
-			wordCountByTopic.add(k);
+		for (k = 0; k <= numberOfTopics; k++) {
+			numberOfTablesByTopic.add(0);
+			wordCountByTopic.add(0);
 			wordCountByTopicAndDocument.add(new int[docStates.length]);
 			wordCountByTopicAndTerm.add(new int[sizeOfVocabulary]);
 		}	// var initialization done
@@ -153,9 +151,6 @@ public class HDPGibbsSampler extends GibbsState {
 	}
 
 
-
-
-
 	public void run(String directory, boolean doShuffle, int shuffleLag, int maxIter, int saveLag) throws FileNotFoundException {
 		System.out.println("starting with " + numberOfTopics + " topics");
 		PrintStream file = new PrintStream(directory + "state.log");
@@ -167,7 +162,7 @@ public class HDPGibbsSampler extends GibbsState {
 				shuffle = true;
 			else
 				shuffle = false;
-			iterateGibbsState(shuffle);
+			iterateGibbsState(false);
 			System.out.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
 					+ totalNumberOfTables + ", gamma = "
 					+ gamma + ", alpha = " + alpha);

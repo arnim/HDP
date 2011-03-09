@@ -12,13 +12,11 @@ public class Corpus {
 	public int sizeVocabulary = 0;
 	public int totalNumberOfWords = 0;
 	public ArrayList<Document> docs;
-
-	public void read(String filename) throws FileNotFoundException {
-
-		InputStream is = new FileInputStream(filename);
+	
+	
+	public void read(InputStream is) {
 		int length, word;
 		Document d;
-
 		try {
 			docs = new ArrayList<Document>();
 			BufferedReader br = new BufferedReader(new InputStreamReader(is,
@@ -47,7 +45,10 @@ public class Corpus {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
 
+	public void read(String filename) throws FileNotFoundException {
+		read(new FileInputStream(filename));
 	}
 
 }

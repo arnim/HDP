@@ -14,8 +14,8 @@ public class DOCState {
 	WordInfo[] words;
 
 	
-	public DOCState(Document doc){  
-		docID = idCounter++;
+	public DOCState(Document doc, int docID){  
+		this.docID = docID;
 	    numberOfTables = 0;  
 	    documentLength = doc.total;
 	    words = new WordInfo[documentLength];	
