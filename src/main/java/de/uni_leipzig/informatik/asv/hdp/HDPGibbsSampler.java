@@ -8,24 +8,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HDPGibbsSampler {
+public class HDPGibbsSampler extends GibbsState { 
 
-	public int sizeOfVocabulary;
-	public int totalNumberOfWords;
-	public int numberOfTopics;
-	public int totalNumberOfTables;
+
 	public double eta;
 	public double gamma;
 	public double alpha;
 
-	private DOCState[] docStates;
-	private ArrayList<Integer> numberOfTablesByTopic;
-	private ArrayList<Integer> wordCountByTopic;
-	private ArrayList<int[]> wordCountByTopicAndDocument;
-	private ArrayList<int[]> wordCountByTopicAndTerm;
+
 	
 	private Random random = new Random();
-	private ArrayList<Double> he;
 
 	public void initGibbsState(Corpus corpus) {
 		sizeOfVocabulary = corpus.sizeVocabulary;
@@ -109,24 +101,6 @@ public class HDPGibbsSampler {
 		defragment();
 	}
 
-	private void defragment() {
-		int[] kOldToKNew = new int[numberOfTopics];
-		int k, newNumberOfTopics = 0;
-		for (k = 0; k < numberOfTopics; k++) {
-			if (wordCountByTopic.get(k) > 0) {
-				kOldToKNew[k] = newNumberOfTopics;
-				Collections.swap(wordCountByTopic, newNumberOfTopics, k);
-				Collections.swap(wordCountByTopic, newNumberOfTopics, k);
-				Collections.swap(numberOfTablesByTopic, newNumberOfTopics, k);
-				Collections.swap(wordCountByTopicAndDocument, newNumberOfTopics, k);
-				Collections.swap(wordCountByTopicAndTerm, newNumberOfTopics, k);
-				newNumberOfTopics++;
-			}
-		}
-		numberOfTopics = newNumberOfTopics;
-		for (int j = 0; j < docStates.length; j++) 
-			docStates[j].defragment(kOldToKNew);
-	}
 
 	private void sampleWordAssignment(DOCState docState, int i, ArrayList<Double> q, ArrayList<Double> f) {	
 		int k, j;
@@ -153,12 +127,11 @@ public class HDPGibbsSampler {
 		total_q += alpha * f_new;
 		q.set(docState.numberOfTables, total_q);
 		u = random.nextDouble() * total_q;
-		he = q;
 		for (j = 0; j < docState.numberOfTables; j++)
 			if (u < q.get(j)) 
 				break;	// decided which table the word i is assigned to
-		System.err.println("u="+u+"j="+j+"i="+i+"docID="+docState.docID);
-		System.err.println();
+//		System.err.println("u="+u+"j="+j+"i="+i+"docID="+docState.docID);
+//		System.err.println();
 		docState.words[i].tableAssignment = j;
 		if (j == docState.numberOfTables) {  // new table
 			while (q.size() <= numberOfTopics)
@@ -179,75 +152,9 @@ public class HDPGibbsSampler {
 			updateDocState(docState, i, 1, -1);
 	}
 
-	private void updateDocState(DOCState docState, int i, int update, int k) {
-		int table = docState.words[i].tableAssignment;
-		System.err.println("table="+table+ " i="+i);
-		int ko = k;
-		if (k < 0)
-				k = docState.tableToTopic.get(table); 
-		docState.wordCountByTable.set(table, docState.wordCountByTable.get(table) + update);
-		try {
-			int[] foo = wordCountByTopicAndTerm.get(k);
-			foo[docState.words[i].termIndex] += update;
-		} catch (Exception e) {
 
-			System.out.println();
-			// TODO: handle exception
-		}
-		
-		wordCountByTopicAndDocument.get(k)[docState.docID] += update;
-		if (update == -1 && docState.wordCountByTable.get(table) == 0) { 
-			totalNumberOfTables--; 
-			numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) - 1);
-			docState.tableToTopic.set(table, - 1);
-		}
-		if (update == 1 && docState.wordCountByTable.get(table) == 1) { 
-			if (table == docState.numberOfTables)
-				docState.numberOfTables++;
-			docState.tableToTopic.set(table, k);
-			numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) + 1); 
-			totalNumberOfTables++;
-			if (docState.tableToTopic.size() < docState.numberOfTables + 1) {
-				docState.tableToTopic.add(-1);
-				docState.wordCountByTable.add(0);
-			}
-			if (k == numberOfTopics) {
-				if (wordCountByTopic.get(k)!=1)
-					System.err.println(wordCountByTopic.get(k)+ " ");
-				assert(wordCountByTopic.get(k)==1);
-				numberOfTopics++; 
-				if (numberOfTablesByTopic.size() < numberOfTopics + 1) {
-					numberOfTablesByTopic.add(0);
-					wordCountByTopic.add(0);
-					wordCountByTopicAndDocument.add(new int[docStates.length]);
-					wordCountByTopicAndTerm.add(new int[sizeOfVocabulary]);
-				}
-			}
-		}
-	}
 
-	private void saveIteration(String name) throws FileNotFoundException  {
-		PrintStream file = new PrintStream(name + "-topics.dat");
-		for (int k = 0; k < numberOfTopics; k++) {
-			for (int w = 0; w < sizeOfVocabulary; w++)
-				file.println(wordCountByTopicAndTerm.get(k)[w]);
-		}
-		file.close();
-		file = new PrintStream(name + "-word-assignments.dat");
-		file.println("d w z t");
-		int t, docID;
-		for (int d = 0; d < docStates.length; d++) {
-			DOCState d_state = docStates[d];
-			docID = d_state.docID;
-			for (int i = 0; i < d_state.documentLength; i++) {
-				t = d_state.words[i].tableAssignment;
-				file.println(docID + " " + 
-						d_state.words[i].termIndex + " " + 
-						d_state.tableToTopic.get(t) + " " + t);
-			}
-		}
-		file.close();
-	}
+
 
 	public void run(String directory, boolean doShuffle, int shuffleLag, int maxIter, int saveLag) throws FileNotFoundException {
 		System.out.println("starting with " + numberOfTopics + " topics");
@@ -272,25 +179,5 @@ public class HDPGibbsSampler {
 	}
 
 	
-	public static void main(String[] args) throws FileNotFoundException {
-
-		String outputDir = "/Users/arnim/Desktop/hdp/test/";
-
-		Corpus corpus = new Corpus();
-		corpus.read("/Users/arnim/Desktop/hdp/test/test.corpus");
-
-	    System.out.println("number of docs  : " + corpus.docs.size());
-	    System.out.println("number of terms : " + corpus.sizeVocabulary);
-	    System.out.println("number of total words : " + corpus.totalNumberOfWords);
-
-		HDPGibbsSampler state = new HDPGibbsSampler();
-		state.eta = 0.5;
-		state.numberOfTopics = 4;
-		state.gamma = 1.0; 
-		state.alpha = 1.0;
-		state.initGibbsState(corpus);
-		state.run(outputDir, true, 10, 1000, 10);
-
-	}
 			
 }
