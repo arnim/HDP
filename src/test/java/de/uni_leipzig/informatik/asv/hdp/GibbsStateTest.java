@@ -114,9 +114,12 @@ public class GibbsStateTest {
 			}
 			for (int t = 0; t < docState.numberOfTables; t++) {
 				int h = docState.wordCountByTable.get(t).intValue();
-				if (h != counter[t])
+				if (h != counter[t]){
+					System.out.println("t="+t+ " docID= "+docState.docID);
 					System.out.println();
+				}
 				assertEquals(h, counter[t]);
+				
 			}
 		}
 	}
@@ -125,13 +128,26 @@ public class GibbsStateTest {
 	public void testWordCountByTableTableAssignments() {
 		_state.initGibbsState(_corpus);
 		_testCONSISTENCY();
+		
+		_state.iterate(false);
+		_state.defragment();
+		_testCONSISTENCY();
+		
 		_state.iterate(false);
 		_testCONSISTENCY();
-		_state.iterate(false);
+		System.err.println("----------------------------------------");
+		_state.defragment();
 		_testCONSISTENCY();
+		
 		_state.iterate(false);
+		_state.defragment();
 		_testCONSISTENCY();
-
+		
+		_state.iterate(false);
+		_state.defragment();
+		_testCONSISTENCY();
+		
+	
 	}
 	
 	

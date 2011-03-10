@@ -142,7 +142,7 @@ public class HDPGibbsSampler extends GibbsState {
 		for (j = 0; j < docState.numberOfTables; j++) {
 			if (docState.wordCountByTable.get(j) > 0) {
 				f_k = f.get(docState.tableToTopic.get(j));
-				System.err.println("SAMP docID="+docState.docID +"table="+j + " docState.wordCountByTable.get(j)="+ docState.wordCountByTable.get(j));
+//				System.err.println("SAMP docID="+docState.docID +"table="+j + " docState.wordCountByTable.get(j)="+ docState.wordCountByTable.get(j));
 			}
 			else
 				f_k = 0.0;
@@ -155,7 +155,7 @@ public class HDPGibbsSampler extends GibbsState {
 		for (j = 0; j < docState.numberOfTables; j++)
 			if (u < q.get(j)) 
 				break;	// decided which table the word i is assigned to
-		System.err.println("SAMP chosen docID="+docState.docID +"table="+j + " i="+i);
+//		System.err.println("SAMP chosen docID="+docState.docID +"table="+j + " i="+i);
 		return j;
 	}
 
@@ -171,7 +171,7 @@ public class HDPGibbsSampler extends GibbsState {
 				shuffle = true;
 			else
 				shuffle = false;
-			iterate(false);
+			iterate(shuffle);
 			System.out.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
 					+ totalNumberOfTables + ", gamma = "
 					+ gamma + ", alpha = " + alpha);
