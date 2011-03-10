@@ -43,9 +43,12 @@ public class DOCState {
 	            tOldToTNew[t] = newNumberOfTables;
 	            tableToTopic.set(newNumberOfTables, kOldToKNew[tableToTopic.get(t)]);
 	            Collections.swap(tableToTopic, newNumberOfTables, t);
+	            System.err.println("swapTable for ID="+docID + "    " + newNumberOfTables +" <==> "+ t);
 	            newNumberOfTables ++;
-	        } else
+	        } else {
 	        	tableToTopic.set(t, -1);
+	        	System.err.println("removeTable="+t +" in doc="+docID);
+	        }
 	    }
 	    numberOfTables = newNumberOfTables;
 	    for (int i = 0; i < documentLength; i++)

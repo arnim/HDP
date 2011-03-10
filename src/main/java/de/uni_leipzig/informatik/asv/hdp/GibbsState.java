@@ -20,31 +20,43 @@ public class GibbsState {
 	protected int numberOfTopics = 1;
 	protected int totalNumberOfTables;
 	
-	protected void removeWord(DOCState docState, int i){
+	protected void removeWord(int docID, int i){
+		DOCState docState = docStates[docID];
 		int table = docState.words[i].tableAssignment;
 		int k = docState.tableToTopic.get(table);
 		docState.wordCountByTable.set(table, docState.wordCountByTable.get(table) - 1);
-		wordCountByTopic.set(k, wordCountByTopic.get(k) - 1);
+		try {
+			wordCountByTopic.set(k, wordCountByTopic.get(k) - 1);
+		} catch (Exception e) {
+			System.err.println("HIER ERROR docID="+docState.docID + " k="+k + " i="+i + " table="+table);
+			throw new RuntimeException();
+		}
+		
+		
 		wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] -= 1;
 		wordCountByTopicAndDocument.get(k)[docState.docID] -= 1;
-		numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) - 1);
+		if (docState.wordCountByTable.get(table) < 0)
+			System.err.println("docID="+docID+ " table="+table+ " count="+docState.wordCountByTable.get(table));
 		if (docState.wordCountByTable.get(table) == 0) { // table is removed
+			System.err.println("-->docID="+docID+ " removing table=" + table);
 			totalNumberOfTables--; 
-			docState.tableToTopic.set(table, - 1); // TODO thats the one to worry about
+			numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) - 1);
+			docState.tableToTopic.set(table, - 1); // TODO thats the one to worry about // NEEDED?
 		}
 	}
 	
-	protected void addWord(DOCState docState, int i, int table, int k) {
+	protected void addWord(int docID, int i, int table, int k) {
+		DOCState docState = docStates[docID];
 		docState.words[i].tableAssignment = table; 
 		docState.wordCountByTable.set(table, docState.wordCountByTable.get(table) + 1);
 		wordCountByTopic.set(k, wordCountByTopic.get(k) + 1);
 		wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] += 1;
 		wordCountByTopicAndDocument.get(k)[docState.docID] += 1;
-		numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) + 1);
 		if (docState.wordCountByTable.get(table) == 1) { // a new table is created
 			docState.numberOfTables++;
 			docState.tableToTopic.set(table, k);
 			totalNumberOfTables++;
+			numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) + 1);
 			docState.tableToTopic.add(-1);
 			docState.wordCountByTable.add(0);
 			if (k == numberOfTopics) { // a new topic is created
@@ -68,8 +80,10 @@ public class GibbsState {
 				Collections.swap(numberOfTablesByTopic, newNumberOfTopics, k);
 				Collections.swap(wordCountByTopicAndDocument, newNumberOfTopics, k);
 				Collections.swap(wordCountByTopicAndTerm, newNumberOfTopics, k);
+				System.err.println("swapTopic: "+newNumberOfTopics + " <=> "+ k + " wordCountByTopic.get(k)="+wordCountByTopic.get(k));
 				newNumberOfTopics++;
-			}
+			} else
+				System.out.println("removeTopic="+k);
 		}
 		numberOfTopics = newNumberOfTopics;
 		for (int j = 0; j < docStates.length; j++) 

@@ -1,10 +1,7 @@
 package de.uni_leipzig.informatik.asv.hdp;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -29,7 +26,6 @@ public class GibbsStateTest {
 	@Before
 	public void setUp() throws Exception {
 		_state = new HDPGibbsSampler();
-
 	}
 
 
@@ -70,8 +66,6 @@ public class GibbsStateTest {
 	}
 	
 	
-
-	
 	
 	@Test
 	public void testDefragment() throws FileNotFoundException {
@@ -86,7 +80,15 @@ public class GibbsStateTest {
 
 
 		_state.defragment(); // in the initial setup there should be no fragmentation
+		
+		
+		System.err.println("-------");
 		_state.defragment(); // if defragment has been applied, its second application shouldn't change anything
+		
+//		System.err.println("-------");
+//		_state.defragment();
+//		
+		
 		
 		
 		assertTrue(_state.numberOfTablesByTopic.equals(numberOfTablesByTopic));
@@ -99,10 +101,38 @@ public class GibbsStateTest {
 
 		
 	
-		ArrayList<Double> q = new ArrayList<Double>(), f = new ArrayList<Double>();
-		System.out.println(_state.sampleTable(_state.docStates[0],1, q, f));
+//		ArrayList<Double> q = new ArrayList<Double>(), f = new ArrayList<Double>();
+//		System.out.println(_state.sampleTable(0,1, q, f));
 	}
 
+	private void _testCONSISTENCY(){
+		for (int i = 0; i < _state.docStates.length; i++) {
+			DOCState docState = _state.docStates[i];
+			int counter[] = new int[docState.numberOfTables];
+			for (int w = 0; w < docState.words.length; w++) {
+				counter[docState.words[w].tableAssignment] ++;
+			}
+			for (int t = 0; t < docState.numberOfTables; t++) {
+				int h = docState.wordCountByTable.get(t).intValue();
+				if (h != counter[t])
+					System.out.println();
+				assertEquals(h, counter[t]);
+			}
+		}
+	}
+	
+	@Test
+	public void testWordCountByTableTableAssignments() {
+		_state.initGibbsState(_corpus);
+		_testCONSISTENCY();
+		_state.iterate(false);
+		_testCONSISTENCY();
+		_state.iterate(false);
+		_testCONSISTENCY();
+		_state.iterate(false);
+		_testCONSISTENCY();
+
+	}
 	
 	
 	@Test
