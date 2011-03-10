@@ -78,7 +78,7 @@ public class HDPGibbsSampler extends GibbsState {
 		}
 	}
 
-	private void iterateGibbsState(boolean shuffle) {
+	private void iterate(boolean shuffle) {
 		if (shuffle) {
 			List<DOCState> h = Arrays.asList(docStates);
 			Collections.shuffle(h);
@@ -95,11 +95,12 @@ public class HDPGibbsSampler extends GibbsState {
 		for (int d = 0; d < docStates.length; d++) {
 			docState = docStates[d];
 			for (int i = 0; i < docState.documentLength; i++) {
-				updateDocState(docState, i, -1, docState.words[i].tableAssignment, -1); // remove the word i from the state
+				removeWord(docState, i); // remove the word i from the state
 				table = sampleTable(docState, i, q, f);
 				if (table == docState.numberOfTables) // new Table
-					updateDocState(docState, i, 1, table, sampleTopic(docState, i, q, f));
-				updateDocState(docState, i, 1, table, -1);
+					addWord(docState, i, table, sampleTopic(docState, i, q, f));
+				else
+					addWord(docState, i, table, docState.tableToTopic.get(table));
 			}
 		}
 		defragment();
@@ -126,7 +127,7 @@ public class HDPGibbsSampler extends GibbsState {
 	}
 	
 
-	private int sampleTable(DOCState docState, int i, ArrayList<Double> q, ArrayList<Double> f) {	
+	int sampleTable(DOCState docState, int i, ArrayList<Double> q, ArrayList<Double> f) {	
 		int k, j;
 		double total_q = 0.0, f_k = 0.0, f_new, u;
 		while (f.size() <= numberOfTopics)
@@ -168,7 +169,7 @@ public class HDPGibbsSampler extends GibbsState {
 				shuffle = true;
 			else
 				shuffle = false;
-			iterateGibbsState(false);
+			iterate(false);
 			System.out.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
 					+ totalNumberOfTables + ", gamma = "
 					+ gamma + ", alpha = " + alpha);

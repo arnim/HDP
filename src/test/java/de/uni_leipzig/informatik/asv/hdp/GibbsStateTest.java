@@ -82,6 +82,8 @@ public class GibbsStateTest {
 		ArrayList<int[]> wordCountByTopicAndTerm = new ArrayList<int[]>(_state.wordCountByTopicAndTerm);
 		int numberOfTopicsCopy = _state.numberOfTopics;
 		int totalNumberOfTablesCopy = _state.totalNumberOfTables;
+		
+
 
 		_state.defragment(); // in the initial setup there should be no fragmentation
 		_state.defragment(); // if defragment has been applied, its second application shouldn't change anything
@@ -92,23 +94,13 @@ public class GibbsStateTest {
 		assertTrue(_state.wordCountByTopicAndDocument.equals(wordCountByTopicAndDocument));
 		assertTrue(_state.wordCountByTopicAndTerm.equals(wordCountByTopicAndTerm));
 		assertTrue(_state.numberOfTopics == numberOfTopicsCopy);
-		assertTrue(_state.totalNumberOfTables == totalNumberOfTablesCopy);
+		assertTrue(_state.totalNumberOfTables == totalNumberOfTablesCopy);  // Only shallow testing!
+		
+
 		
 	
-		
-		
-
-
-
-//		
-//		System.err.println(_state.numberOfTopics);
-//		System.err.println(_state.numberOfTablesByTopic.toString());
-
-		_state.defragment();
-		_state.defragment();
-		_state.defragment();
-//		System.out.println(_state.sizeOfVocabulary);
-//		System.out.println(1);
+		ArrayList<Double> q = new ArrayList<Double>(), f = new ArrayList<Double>();
+		System.out.println(_state.sampleTable(_state.docStates[0],1, q, f));
 	}
 
 	
