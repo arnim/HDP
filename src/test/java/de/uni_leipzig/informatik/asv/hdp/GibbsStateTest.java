@@ -39,7 +39,7 @@ public class GibbsStateTest {
 	
 	@Test
 	public void testDefaults() throws FileNotFoundException {
-		assertEquals(.5, _state.eta, Double.MIN_VALUE);
+		assertEquals(.5, _state.beta, Double.MIN_VALUE);
 		assertEquals(1, _state.numberOfTopics); // initial number of topics
 		assertEquals(1, _state.numberOfTopics); // initial number of topics
 		assertEquals(1, _state.gamma, Double.MIN_VALUE); // initial number of topics
@@ -55,7 +55,6 @@ public class GibbsStateTest {
 		assertEquals(100, _state.sizeOfVocabulary); 
 		assertEquals(10, _state.docStates[10].docID); 
 		assertEquals(20, _state.docStates.length); 
-
 		assertTrue(_state.wordCountByTopic.get(0).equals(400)); 
 		assertTrue(_state.wordCountByTopic.get(1).equals(0)); 
 		assertEquals(2, _state.wordCountByTopic.size());  
@@ -66,44 +65,6 @@ public class GibbsStateTest {
 	}
 	
 	
-	
-	@Test
-	public void testDefragment() throws FileNotFoundException {
-		_state.initGibbsState(_corpus);
-		ArrayList<Integer> numberOfTablesByTopic = new ArrayList<Integer>(_state.numberOfTablesByTopic);
-		ArrayList<Integer> wordCountByTopic = new ArrayList<Integer>(_state.wordCountByTopic);
-		ArrayList<int[]> wordCountByTopicAndDocument = new ArrayList<int[]>(_state.wordCountByTopicAndDocument);
-		ArrayList<int[]> wordCountByTopicAndTerm = new ArrayList<int[]>(_state.wordCountByTopicAndTerm);
-		int numberOfTopicsCopy = _state.numberOfTopics;
-		int totalNumberOfTablesCopy = _state.totalNumberOfTables;
-		
-
-
-		_state.defragment(); // in the initial setup there should be no fragmentation
-		
-		
-		System.err.println("-------");
-		_state.defragment(); // if defragment has been applied, its second application shouldn't change anything
-		
-//		System.err.println("-------");
-//		_state.defragment();
-//		
-		
-		
-		
-		assertTrue(_state.numberOfTablesByTopic.equals(numberOfTablesByTopic));
-		assertTrue(_state.wordCountByTopic.equals(wordCountByTopic));
-		assertTrue(_state.wordCountByTopicAndDocument.equals(wordCountByTopicAndDocument));
-		assertTrue(_state.wordCountByTopicAndTerm.equals(wordCountByTopicAndTerm));
-		assertTrue(_state.numberOfTopics == numberOfTopicsCopy);
-		assertTrue(_state.totalNumberOfTables == totalNumberOfTablesCopy);  // Only shallow testing!
-		
-
-		
-	
-//		ArrayList<Double> q = new ArrayList<Double>(), f = new ArrayList<Double>();
-//		System.out.println(_state.sampleTable(0,1, q, f));
-	}
 
 	private void _testCONSISTENCY(){
 		for (int i = 0; i < _state.docStates.length; i++) {
@@ -114,10 +75,6 @@ public class GibbsStateTest {
 			}
 			for (int t = 0; t < docState.numberOfTables; t++) {
 				int h = docState.wordCountByTable.get(t).intValue();
-				if (h != counter[t]){
-					System.out.println("t="+t+ " docID= "+docState.docID);
-					System.out.println();
-				}
 				assertEquals(h, counter[t]);
 				
 			}
@@ -126,35 +83,16 @@ public class GibbsStateTest {
 	
 	@Test
 	public void testWordCountByTableTableAssignments() {
-		_state.initGibbsState(_corpus);
-		_testCONSISTENCY();
-		
-		_state.iterate(false);
-		_state.defragment();
-		_testCONSISTENCY();
-		
-		_state.iterate(false);
-		_testCONSISTENCY();
-		System.err.println("----------------------------------------");
-		_state.defragment();
-		_testCONSISTENCY();
-		
-		_state.iterate(false);
-		_state.defragment();
-		_testCONSISTENCY();
-		
-		_state.iterate(false);
-		_state.defragment();
-		_testCONSISTENCY();
-		
-	
+		for ( int i = 0; i <= 100; i++){
+			_state.initGibbsState(_corpus);
+			_testCONSISTENCY();
+		}
 	}
 	
 	
 	@Test
 	public void testHDPGibbsSampler() throws FileNotFoundException {
-	
-		_state.eta = 0.5;
+		_state.beta = 0.5;
 		_state.numberOfTopics = 4;
 		_state.gamma = 1.0; 
 		_state.alpha = 1.0;

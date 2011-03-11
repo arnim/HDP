@@ -11,7 +11,7 @@ import java.util.Random;
 public class HDPGibbsSampler extends GibbsState { 
 
 
-	public double eta  = 0.5; // default only
+	public double beta  = 0.5; // default only
 	public double gamma = 1.0;
 	public double alpha = 1.0;
 	
@@ -90,13 +90,13 @@ public class HDPGibbsSampler extends GibbsState {
 			}
 		}
 		int table;
-		ArrayList<Double> q = new ArrayList<Double>(), f = new ArrayList<Double>();
+		ArrayList<Double> p = new ArrayList<Double>(), f = new ArrayList<Double>();
 		for (int d = 0; d < docStates.length; d++) {
 			for (int i = 0; i < docStates[d].documentLength; i++) {
 				removeWord(d, i); // remove the word i from the state
-				table = sampleTable(d, i, q, f);
+				table = sampleTable(d, i, p, f);
 				if (table == docStates[d].numberOfTables) // new Table
-					addWord(d, i, table, sampleTopic(q, f)); // sampling its Topic
+					addWord(d, i, table, sampleTopic(p, f)); // sampling its Topic
 				else
 					addWord(d, i, table, docStates[d].tableToTopic.get(table)); // existing Table
 			}
@@ -106,80 +106,71 @@ public class HDPGibbsSampler extends GibbsState {
 
 	
 	
-	private int sampleTopic(ArrayList<Double> q, ArrayList<Double> f) {
-		double u, total_q = 0.0;
+	private int sampleTopic(ArrayList<Double> p, ArrayList<Double> f) {
+		double u, pSum = 0.0;
 		int k;
-		while (q.size() <= numberOfTopics)
-			q.add(0.0);
+		while (p.size() <= numberOfTopics)
+			p.add(0.0);
 		for (k = 0; k < numberOfTopics; k++) {
-			total_q += numberOfTablesByTopic.get(k) * f.get(k);
-			q.set(k, total_q);
+			pSum += numberOfTablesByTopic.get(k) * f.get(k);
+			p.set(k, pSum);
 		}
-		total_q += gamma / sizeOfVocabulary;
-		q.set(numberOfTopics, total_q);
-		u = random.nextDouble() * total_q;
+		pSum += gamma / sizeOfVocabulary;
+		p.set(numberOfTopics, pSum);
+		u = random.nextDouble() * pSum;
 		for (k = 0; k <= numberOfTopics; k++)
-			if (u < q.get(k))
+			if (u < p.get(k))
 				break;
 		return k;
 	}
 	
 
-	int sampleTable(int docID, int i, ArrayList<Double> q, ArrayList<Double> f) {	
+	int sampleTable(int docID, int i, ArrayList<Double> p, ArrayList<Double> f) {	
 		DOCState docState = docStates[docID];
 		int k, j;
-		double total_q = 0.0, f_k = 0.0, f_new, u;
+		double pSum = 0.0, fk = 0.0, fNew, u;
 		while (f.size() <= numberOfTopics)
 			f.add(0.0);
-		while (q.size() <= docState.numberOfTables)
-			q.add(0.0);
-		f_new = gamma / sizeOfVocabulary;
+		while (p.size() <= docState.numberOfTables)
+			p.add(0.0);
+		fNew = gamma / sizeOfVocabulary;
 		for (k = 0; k < numberOfTopics; k++) {
-			f.set(k, (wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] + eta) / (wordCountByTopic.get(k) + sizeOfVocabulary * eta));
-			f_new += numberOfTablesByTopic.get(k) * f.get(k);
+			f.set(k, (wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] + beta) / 
+					(wordCountByTopic.get(k) + sizeOfVocabulary * beta));
+			fNew += numberOfTablesByTopic.get(k) * f.get(k);
 		}
-		f_new = f_new / (totalNumberOfTables + gamma);
+		fNew = fNew / (totalNumberOfTables + gamma);
 		for (j = 0; j < docState.numberOfTables; j++) {
-			if (docState.wordCountByTable.get(j) > 0) {
-				f_k = f.get(docState.tableToTopic.get(j));
-//				System.err.println("SAMP docID="+docState.docID +"table="+j + " docState.wordCountByTable.get(j)="+ docState.wordCountByTable.get(j));
-			}
+			if (docState.wordCountByTable.get(j) > 0) 
+				fk = f.get(docState.tableToTopic.get(j));
 			else
-				f_k = 0.0;
-			total_q += docState.wordCountByTable.get(j) * f_k;
-			q.set(j, total_q);
+				fk = 0.0;
+			pSum += docState.wordCountByTable.get(j) * fk;
+			p.set(j, pSum);
 		}
-		total_q += alpha * f_new;
-		q.set(docState.numberOfTables, total_q);
-		u = random.nextDouble() * total_q;
+		pSum += alpha * fNew;
+		p.set(docState.numberOfTables, pSum);
+		u = random.nextDouble() * pSum;
 		for (j = 0; j < docState.numberOfTables; j++)
-			if (u < q.get(j)) 
+			if (u < p.get(j)) 
 				break;	// decided which table the word i is assigned to
-//		System.err.println("SAMP chosen docID="+docState.docID +"table="+j + " i="+i);
 		return j;
 	}
 
 
 	public void run(String directory, boolean doShuffle, int shuffleLag, int maxIter, int saveLag) throws FileNotFoundException {
-		System.out.println("starting with " + numberOfTopics + " topics");
-		PrintStream file = new PrintStream(directory + "state.log");
-		file.println("time iter num.topics num.tables likelihood gamma alpha");
 		boolean shuffle = false;
 		for (int iter = 0; iter < maxIter; iter++) {
-			file.print("iter = " + iter + ", ");
 			if (doShuffle && (iter > 0) && (iter % shuffleLag == 0))
 				shuffle = true;
 			else
 				shuffle = false;
 			iterate(shuffle);
 			System.out.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
-					+ totalNumberOfTables + ", gamma = "
-					+ gamma + ", alpha = " + alpha);
-
+					+ totalNumberOfTables );
 			if (saveLag != -1 && (iter % saveLag == 0)) 
 				saveState(directory + "/" + iter);
 		}
-		file.close(); 
 	}
 
 			
