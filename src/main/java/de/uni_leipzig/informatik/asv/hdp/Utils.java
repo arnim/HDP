@@ -5,30 +5,36 @@ import java.util.List;
 class Utils {
 
 
-	public static double similarity(int[] a1, int[] other) {
-		double sim = 0.0, norm1 = 0.0, norm2 = 0.0;
-		for (int i = 0; i < a1.length; i++) {
-			sim += a1[i] * other[i];
-			norm1 += a1[i] * a1[i];
-			norm2 += other[i] * other[i];
-		}
-		return sim / Math.sqrt(norm1 * norm2);
-	}
-
-	public static void changeAtAbout(List<Double> numTablesByZ, int position,
+	public static void changeAtAbout(List<Double> list, int position,
 			double about) {
-		double x = numTablesByZ.get(position);
-		numTablesByZ.set(position, x + about);
+		double x = list.get(position);
+		list.set(position, x + about);
 	}
 
-	public static void changeAtAbout(List<Integer> numTablesByZ, int position,
+	public static void changeAtAbout(List<Integer> list, int position,
 			int about) {
-		if (numTablesByZ.size() <= position)
-			numTablesByZ.add(about);
+		if (list.size() <= position)
+			list.add(about);
 		else {
-			int x = numTablesByZ.get(position);
-			numTablesByZ.set(position, x + about);
+			int x = list.get(position);
+			list.set(position, x + about);
 		}
 	}
 
+	
+	public void shuffle(Object[] arr){
+		int l = arr.length; 
+		for (int i = 0; i < l; i++) 
+		   swap(arr, i, i + (int) (Math.random() * (l-i)));
+	}
+	
+	
+	public void swap(Object[] arr, int arg1, int arg2){
+		   Object t = arr[arg1]; 
+		   arr[arg1] = arr[arg2]; 
+		   arr[arg2] = t; 
+	}
+	
+	
+	
 }

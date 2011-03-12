@@ -3,7 +3,9 @@ package de.uni_leipzig.informatik.asv.hdp;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 public class GibbsState {
 
@@ -20,7 +22,12 @@ public class GibbsState {
 	protected int numberOfTopics = 1;
 	protected int totalNumberOfTables;
 	
-		
+	/**
+	 * Removes a word from the bookkeeping
+	 * 
+	 * @param docID the id of the document the word belongs to 
+	 * @param i the index of the word
+	 */
 	protected void removeWord(int docID, int i){
 		DOCState docState = docStates[docID];
 		int table = docState.words[i].tableAssignment;
@@ -36,6 +43,14 @@ public class GibbsState {
 		}
 	}
 	
+	/**
+	 * Add a word to the bookkeeping
+	 * 
+	 * @param docID	docID the id of the document the word belongs to 
+	 * @param i the index of the word
+	 * @param table the table to which the word is assigned to
+	 * @param k the topic to which the word is assigned to
+	 */
 	protected void addWord(int docID, int i, int table, int k) {
 		DOCState docState = docStates[docID];
 		docState.words[i].tableAssignment = table; 
@@ -61,6 +76,9 @@ public class GibbsState {
 		}
 	}
 
+	/**
+	 * Removes topics from the bookkeeping that have no words assigned to
+	 */
 	protected void defragment() {
 		int[] kOldToKNew = new int[numberOfTopics];
 		int k, newNumberOfTopics = 0;
@@ -80,6 +98,27 @@ public class GibbsState {
 	}
 	
 	
+	/**
+	 * Permute the ordering of documents and words in the bookkeeping
+	 */
+	protected void doShuffle(){
+		List<DOCState> h = Arrays.asList(docStates);
+		Collections.shuffle(h);
+		docStates = h.toArray(new DOCState[h.size()]);
+		for (int j = 0; j < docStates.length; j ++){
+			List<WordInfo> h2 = Arrays.asList(docStates[j].words);
+			Collections.shuffle(h2);
+			docStates[j].words = h2.toArray(new WordInfo[h2.size()]);
+		}
+	}
+	
+	
+	/**
+	 * Writes the current topic and table assignments on disc
+	 * 
+	 * @param name
+	 * @throws FileNotFoundException
+	 */
 	protected void saveState(String name) throws FileNotFoundException  {
 		PrintStream file = new PrintStream(name + "-topics.dat");
 		for (int k = 0; k < numberOfTopics; k++) {

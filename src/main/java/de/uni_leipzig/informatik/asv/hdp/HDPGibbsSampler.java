@@ -1,11 +1,7 @@
 package de.uni_leipzig.informatik.asv.hdp;
 
 import java.io.FileNotFoundException;
-import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 
 public class HDPGibbsSampler extends GibbsState { 
@@ -17,6 +13,11 @@ public class HDPGibbsSampler extends GibbsState {
 	
 	private Random random = new Random();
 
+	/**
+	 * Initially assign the words to tables and topics
+	 * 
+	 * @param corpus
+	 */
 	public void initGibbsState(Corpus corpus) {
 		sizeOfVocabulary = corpus.sizeVocabulary;
 		totalNumberOfWords = corpus.totalNumberOfWords;
@@ -24,9 +25,6 @@ public class HDPGibbsSampler extends GibbsState {
 		for (int d = 0; d < corpus.docs.size(); d++)
 			docStates[d] = new DOCState(corpus.docs.get(d), d);
 		int k, i, j;
-		double prob, u;
-		double[] q = new double[numberOfTopics];
-		int[] v = new int[sizeOfVocabulary];
 		DOCState docState;
 		numberOfTablesByTopic = new ArrayList<Integer>();
 		wordCountByTopic = new ArrayList<Integer>();
@@ -40,55 +38,24 @@ public class HDPGibbsSampler extends GibbsState {
 		}	// var initialization done
 		for (k = 0; k < numberOfTopics; k++) { 
 			docState = docStates[k];
-			totalNumberOfTables++; 
-			Utils.changeAtAbout(numberOfTablesByTopic, k, 1);
-			Utils.changeAtAbout(wordCountByTopic, k, docState.documentLength);
-			wordCountByTopicAndDocument.get(k)[docState.docID] += docState.documentLength;
-			docState.numberOfTables = 1;  
-			docState.tableToTopic.set(0, k); 
-			docState.wordCountByTable.set(0, docState.documentLength); 
-			for (i = 0; i < docState.documentLength; i++) {
-				wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex]++;
-				docState.words[i].tableAssignment = 0;
-			} 
+			for (i = 0; i < docState.documentLength; i++) 
+				addWord(docState.docID, i, 0, k);
 		} // all topics have now one document
 		for (j = numberOfTopics; j < docStates.length; j++) {
 			docState = docStates[j]; 
-			prob = 0;
+			k = random.nextInt(numberOfTopics);
 			for (i = 0; i < docState.documentLength; i++) 
-				v[docState.words[i].termIndex]++;
-			for (i = 0; i < numberOfTopics; i++) {
-				prob += Utils.similarity(v, wordCountByTopicAndTerm.get(i));
-				q[i] = prob;
-			}
-			u = random.nextDouble() * q[numberOfTopics-1];
-			for (k = 0; k <= numberOfTopics; k++)
-				if (u < q[k])
-					break; // selecting to which topic the document should belong to
-			Utils.changeAtAbout(numberOfTablesByTopic, k, 1);
-			Utils.changeAtAbout(wordCountByTopic, k, docState.documentLength);
-			wordCountByTopicAndDocument.get(k)[docState.docID] = docState.documentLength;
-			docState.numberOfTables = 1;
-			docState.tableToTopic.set(0, k);
-			docState.wordCountByTable.set(0, docState.documentLength);
-			for (i = 0; i < docState.documentLength; i++) {
-				wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex]++;
-				docState.words[i].tableAssignment = 0;
-			} // updating the bookkeeping 
-		}
+				addWord(docState.docID, i, 0, k);
+		} // the words in the remaining documents are now assigned too
 	}
 
-	protected void iterate(boolean shuffle) {
-		if (shuffle) {
-			List<DOCState> h = Arrays.asList(docStates);
-			Collections.shuffle(h);
-			docStates = h.toArray(new DOCState[h.size()]);
-			for (int j = 0; j < docStates.length; j ++){
-				List<WordInfo> h2 = Arrays.asList(docStates[j].words);
-				Collections.shuffle(h2);
-				docStates[j].words = h2.toArray(new WordInfo[h2.size()]);
-			}
-		}
+	
+	
+	/**
+	 * Step one step ahead
+	 * 
+	 */
+	protected void iterate() {
 		int table;
 		ArrayList<Double> p = new ArrayList<Double>(), f = new ArrayList<Double>();
 		for (int d = 0; d < docStates.length; d++) {
@@ -105,7 +72,13 @@ public class HDPGibbsSampler extends GibbsState {
 	}
 
 	
-	
+	/**
+	 * Decide to which topic the table should be assigned to
+	 * 
+	 * @param p
+	 * @param f
+	 * @return the index of the topic
+	 */
 	private int sampleTopic(ArrayList<Double> p, ArrayList<Double> f) {
 		double u, pSum = 0.0;
 		int k;
@@ -125,6 +98,15 @@ public class HDPGibbsSampler extends GibbsState {
 	}
 	
 
+	/**	 
+	 * Decide to which table the word should be assigned to
+	 * 
+	 * @param docID the index of the document of the current word
+	 * @param i the index of the current word
+	 * @param p
+	 * @param f
+	 * @return the index of the table
+	 */
 	int sampleTable(int docID, int i, ArrayList<Double> p, ArrayList<Double> f) {	
 		DOCState docState = docStates[docID];
 		int k, j;
@@ -158,14 +140,21 @@ public class HDPGibbsSampler extends GibbsState {
 	}
 
 
-	public void run(String directory, boolean doShuffle, int shuffleLag, int maxIter, int saveLag) throws FileNotFoundException {
-		boolean shuffle = false;
+	/**
+	 * 
+	 * @param directory
+	 * @param doShuffle
+	 * @param shuffleLag
+	 * @param maxIter
+	 * @param saveLag
+	 * @throws FileNotFoundException
+	 */
+	public void run(String directory, boolean doShuffle, int shuffleLag, int maxIter, int saveLag) 
+	throws FileNotFoundException {
 		for (int iter = 0; iter < maxIter; iter++) {
 			if (doShuffle && (iter > 0) && (iter % shuffleLag == 0))
-				shuffle = true;
-			else
-				shuffle = false;
-			iterate(shuffle);
+				doShuffle();
+			iterate();
 			System.out.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
 					+ totalNumberOfTables );
 			if (saveLag != -1 && (iter % saveLag == 0)) 

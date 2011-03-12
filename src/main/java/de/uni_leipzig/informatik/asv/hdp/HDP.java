@@ -8,7 +8,7 @@ public class HDP {
 	public static void main(String[] args) throws FileNotFoundException {
 		if (args.length!=2) {
 			System.out.println("The application needs to params.");
-			System.out.println("Use: java de.uni_leipzig.informatik.asv.hdp src.corpus ~target/");;
+			System.out.println("Use program arguments: src.corpus ~target/");;
 			return;
 		}
 		
