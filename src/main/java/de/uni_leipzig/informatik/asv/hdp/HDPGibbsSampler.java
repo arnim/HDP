@@ -12,6 +12,8 @@ public class HDPGibbsSampler extends GibbsState {
 	public double alpha = 1.0;
 	
 	private Random random = new Random();
+	private double[] p;
+	private double[] f;
 
 	/**
 	 * Initially assign the words to tables and topics
@@ -26,13 +28,11 @@ public class HDPGibbsSampler extends GibbsState {
 			docStates[d] = new DOCState(corpus.docs.get(d), d);
 		int k, i, j;
 		DOCState docState;
-		numberOfTablesByTopic = new ArrayList<Integer>();
-		wordCountByTopic = new ArrayList<Integer>();
+		numberOfTablesByTopic = new int[numberOfTopics+1];
+		wordCountByTopic = new  int[numberOfTopics+1];
 		wordCountByTopicAndDocument = new ArrayList<int[]>();
 		wordCountByTopicAndTerm = new ArrayList<int[]>();
 		for (k = 0; k <= numberOfTopics; k++) {
-			numberOfTablesByTopic.add(0);
-			wordCountByTopic.add(0);
 			wordCountByTopicAndDocument.add(new int[docStates.length]);
 			wordCountByTopicAndTerm.add(new int[sizeOfVocabulary]);
 		}	// var initialization done
@@ -57,15 +57,16 @@ public class HDPGibbsSampler extends GibbsState {
 	 */
 	protected void iterate() {
 		int table;
-		ArrayList<Double> p = new ArrayList<Double>(), f = new ArrayList<Double>();
+		p = new double[50]; 
+		f = new double[50];
 		for (int d = 0; d < docStates.length; d++) {
 			for (int i = 0; i < docStates[d].documentLength; i++) {
 				removeWord(d, i); // remove the word i from the state
-				table = sampleTable(d, i, p, f);
+				table = sampleTable(d, i);
 				if (table == docStates[d].numberOfTables) // new Table
-					addWord(d, i, table, sampleTopic(p, f)); // sampling its Topic
+					addWord(d, i, table, sampleTopic()); // sampling its Topic
 				else
-					addWord(d, i, table, docStates[d].tableToTopic.get(table)); // existing Table
+					addWord(d, i, table, docStates[d].tableToTopic[table]); // existing Table
 			}
 		}
 		defragment();
@@ -79,20 +80,19 @@ public class HDPGibbsSampler extends GibbsState {
 	 * @param f
 	 * @return the index of the topic
 	 */
-	private int sampleTopic(ArrayList<Double> p, ArrayList<Double> f) {
+	private int sampleTopic() {
 		double u, pSum = 0.0;
 		int k;
-		while (p.size() <= numberOfTopics)
-			p.add(0.0);
+		p = Utils.ensureCapacity(p, numberOfTopics);
 		for (k = 0; k < numberOfTopics; k++) {
-			pSum += numberOfTablesByTopic.get(k) * f.get(k);
-			p.set(k, pSum);
+			pSum += numberOfTablesByTopic[k] * f[k];
+			p[k] = pSum;
 		}
 		pSum += gamma / sizeOfVocabulary;
-		p.set(numberOfTopics, pSum);
+		p[numberOfTopics] = pSum;
 		u = random.nextDouble() * pSum;
 		for (k = 0; k <= numberOfTopics; k++)
-			if (u < p.get(k))
+			if (u < p[k])
 				break;
 		return k;
 	}
@@ -107,34 +107,32 @@ public class HDPGibbsSampler extends GibbsState {
 	 * @param f
 	 * @return the index of the table
 	 */
-	int sampleTable(int docID, int i, ArrayList<Double> p, ArrayList<Double> f) {	
+	int sampleTable(int docID, int i) {	
 		DOCState docState = docStates[docID];
 		int k, j;
 		double pSum = 0.0, fk = 0.0, fNew, u;
-		while (f.size() <= numberOfTopics)
-			f.add(0.0);
-		while (p.size() <= docState.numberOfTables)
-			p.add(0.0);
+		f = Utils.ensureCapacity(f, numberOfTopics);
+		p = Utils.ensureCapacity(p, docState.numberOfTables);
 		fNew = gamma / sizeOfVocabulary;
 		for (k = 0; k < numberOfTopics; k++) {
-			f.set(k, (wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] + beta) / 
-					(wordCountByTopic.get(k) + sizeOfVocabulary * beta));
-			fNew += numberOfTablesByTopic.get(k) * f.get(k);
+			f[k] = (wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] + beta) / 
+					(wordCountByTopic[k] + sizeOfVocabulary * beta);
+			fNew += numberOfTablesByTopic[k] * f[k];
 		}
 		fNew = fNew / (totalNumberOfTables + gamma);
 		for (j = 0; j < docState.numberOfTables; j++) {
-			if (docState.wordCountByTable.get(j) > 0) 
-				fk = f.get(docState.tableToTopic.get(j));
+			if (docState.wordCountByTable[j] > 0) 
+				fk = f[docState.tableToTopic[j]];
 			else
 				fk = 0.0;
-			pSum += docState.wordCountByTable.get(j) * fk;
-			p.set(j, pSum);
+			pSum += docState.wordCountByTable[j] * fk;
+			p[j] = pSum;
 		}
 		pSum += alpha * fNew;
-		p.set(docState.numberOfTables, pSum);
+		p[docState.numberOfTables] = pSum;
 		u = random.nextDouble() * pSum;
 		for (j = 0; j < docState.numberOfTables; j++)
-			if (u < p.get(j)) 
+			if (u < p[j]) 
 				break;	// decided which table the word i is assigned to
 		return j;
 	}

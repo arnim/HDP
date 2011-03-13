@@ -17,7 +17,8 @@ public class HDP {
 		corpus.read(args[0]);
 		HDPGibbsSampler state = new HDPGibbsSampler();
 		
-		state.numberOfTopics = 5;
+		state.numberOfTopics = 100;
+		state.beta = .2;
 		
 		state.initGibbsState(corpus);
 		
@@ -26,7 +27,7 @@ public class HDP {
 		System.out.println("totalNumberOfWords="+state.totalNumberOfWords);
 		System.out.println("NumberOfDocs="+state.docStates.length);
 
-		state.run(args[1], true, 10, 1000, 10);
+		state.run(args[1], true, 10, 2001, 100);
 
 	}
 

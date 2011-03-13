@@ -1,5 +1,5 @@
 Gibbs sampler Java implementation for the Hierarchical Dirichlet Processes 
-===========================================================================
+=======================================================================
 
 Described in:
 Hierarchical Bayesian Nonparametric Models with Applications. 

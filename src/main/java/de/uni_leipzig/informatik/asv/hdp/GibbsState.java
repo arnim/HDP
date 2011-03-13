@@ -11,8 +11,8 @@ public class GibbsState {
 
 	
 	protected DOCState[] docStates;
-	protected ArrayList<Integer> numberOfTablesByTopic;
-	protected ArrayList<Integer> wordCountByTopic;
+	protected int[] numberOfTablesByTopic;
+	protected int[] wordCountByTopic;
 	protected ArrayList<int[]> wordCountByTopicAndDocument;
 	protected ArrayList<int[]> wordCountByTopicAndTerm;
 	
@@ -31,15 +31,15 @@ public class GibbsState {
 	protected void removeWord(int docID, int i){
 		DOCState docState = docStates[docID];
 		int table = docState.words[i].tableAssignment;
-		int k = docState.tableToTopic.get(table);
-		docState.wordCountByTable.set(table, docState.wordCountByTable.get(table) - 1);
-		wordCountByTopic.set(k, wordCountByTopic.get(k) - 1);		
+		int k = docState.tableToTopic[table];
+		docState.wordCountByTable[table]--; //, docState.wordCountByTable.get(table) - 1);
+		wordCountByTopic[k]--; //.set(k, wordCountByTopic.get(k) - 1);		
 		wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] -= 1;
 		wordCountByTopicAndDocument.get(k)[docState.docID] -= 1;
-		if (docState.wordCountByTable.get(table) == 0) { // table is removed
+		if (docState.wordCountByTable[table] == 0) { // table is removed
 			totalNumberOfTables--; 
-			numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) - 1);
-			docState.tableToTopic.set(table, - 1); 
+			numberOfTablesByTopic[k]--; //.set(k, numberOfTablesByTopic.get(k) - 1);
+			docState.tableToTopic[table] = -1; 
 		}
 	}
 	
@@ -54,21 +54,23 @@ public class GibbsState {
 	protected void addWord(int docID, int i, int table, int k) {
 		DOCState docState = docStates[docID];
 		docState.words[i].tableAssignment = table; 
-		docState.wordCountByTable.set(table, docState.wordCountByTable.get(table) + 1);
-		wordCountByTopic.set(k, wordCountByTopic.get(k) + 1);
+		docState.wordCountByTable[table]++; //.set(, docState.wordCountByTable.get(table) + 1);
+		wordCountByTopic[k]++; //.set(k, wordCountByTopic.get(k) + 1);
 		wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] += 1;
 		wordCountByTopicAndDocument.get(k)[docState.docID] += 1;
-		if (docState.wordCountByTable.get(table) == 1) { // a new table is created
+		if (docState.wordCountByTable[table] == 1) { // a new table is created
 			docState.numberOfTables++;
-			docState.tableToTopic.set(table, k);
+			docState.tableToTopic[table] = k;
 			totalNumberOfTables++;
-			numberOfTablesByTopic.set(k, numberOfTablesByTopic.get(k) + 1);
-			docState.tableToTopic.add(-1);
-			docState.wordCountByTable.add(0);
+			numberOfTablesByTopic[k]++; //.set(k, numberOfTablesByTopic.get(k) + 1);
+			docState.tableToTopic = Utils.ensureCapacity(docState.tableToTopic, docState.numberOfTables);
+//			docState.tableToTopic.add(-1);
+			docState.wordCountByTable = Utils.ensureCapacity(docState.wordCountByTable, docState.numberOfTables);
+//			docState.wordCountByTable.add(0);
 			if (k == numberOfTopics) { // a new topic is created
 				numberOfTopics++; 
-				numberOfTablesByTopic.add(0);
-				wordCountByTopic.add(0);
+				numberOfTablesByTopic = Utils.ensureCapacity(numberOfTablesByTopic, numberOfTopics); 
+				wordCountByTopic = Utils.ensureCapacity(wordCountByTopic, numberOfTopics);
 				wordCountByTopicAndDocument.add(new int[docStates.length]);
 				wordCountByTopicAndTerm.add(new int[sizeOfVocabulary]);
 
@@ -83,10 +85,10 @@ public class GibbsState {
 		int[] kOldToKNew = new int[numberOfTopics];
 		int k, newNumberOfTopics = 0;
 		for (k = 0; k < numberOfTopics; k++) {
-			if (wordCountByTopic.get(k) > 0) {
+			if (wordCountByTopic[k] > 0) {
 				kOldToKNew[k] = newNumberOfTopics;
-				Collections.swap(wordCountByTopic, newNumberOfTopics, k);
-				Collections.swap(numberOfTablesByTopic, newNumberOfTopics, k);
+				Utils.swap(wordCountByTopic, newNumberOfTopics, k);
+				Utils.swap(numberOfTablesByTopic, newNumberOfTopics, k);
 				Collections.swap(wordCountByTopicAndDocument, newNumberOfTopics, k);
 				Collections.swap(wordCountByTopicAndTerm, newNumberOfTopics, k);
 				newNumberOfTopics++;
@@ -137,7 +139,7 @@ public class GibbsState {
 				t = d_state.words[i].tableAssignment;
 				file.println(docID + " " + 
 						d_state.words[i].termIndex + " " + 
-						d_state.tableToTopic.get(t) + " " + t);
+						d_state.tableToTopic[t] + " " + t);
 			}
 		}
 		file.close();

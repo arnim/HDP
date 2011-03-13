@@ -9,8 +9,8 @@ public class DOCState {
 	
 	int docID, documentLength, numberOfTables;
 
-    ArrayList<Integer> tableToTopic = new ArrayList<Integer>(); 
-    ArrayList<Integer> wordCountByTable = new ArrayList<Integer>(); 
+	int[] tableToTopic; // = new ArrayList<Integer>(); 
+    int[] wordCountByTable;// = new ArrayList<Integer>(); 
 	WordInfo[] words;
 
 	
@@ -19,10 +19,8 @@ public class DOCState {
 	    numberOfTables = 0;  
 	    documentLength = doc.total;
 	    words = new WordInfo[documentLength];	
-		for (int k = 0; k < 2; k++){
-			tableToTopic.add(null);
-			wordCountByTable.add(0);
-		}
+	    wordCountByTable = new int[2];
+	    tableToTopic = new int[2];
 	    int word, count, m = 0;
 	    for (int n = 0; n < doc.numberOfUniquTerms; n++) {
 	        word  = doc.words[n];
@@ -39,13 +37,13 @@ public class DOCState {
 	    int[] tOldToTNew = new int[numberOfTables];
 	    int t, newNumberOfTables = 0;
 	    for (t = 0; t < numberOfTables; t++){
-	        if (wordCountByTable.get(t) > 0){
+	        if (wordCountByTable[t] > 0){
 	            tOldToTNew[t] = newNumberOfTables;
-	            tableToTopic.set(newNumberOfTables, kOldToKNew[tableToTopic.get(t)]);
-	            Collections.swap(wordCountByTable, newNumberOfTables, t);
+	            tableToTopic[newNumberOfTables] = kOldToKNew[tableToTopic[t]];
+	            Utils.swap(wordCountByTable, newNumberOfTables, t);
 	            newNumberOfTables ++;
 	        } else 
-	        	tableToTopic.set(t, -1);
+	        	tableToTopic[t] = -1;
 	    }
 	    numberOfTables = newNumberOfTables;
 	    for (int i = 0; i < documentLength; i++)
