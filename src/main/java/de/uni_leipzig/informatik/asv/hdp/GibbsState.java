@@ -2,7 +2,6 @@ package de.uni_leipzig.informatik.asv.hdp;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -13,8 +12,8 @@ public class GibbsState {
 	protected DOCState[] docStates;
 	protected int[] numberOfTablesByTopic;
 	protected int[] wordCountByTopic;
-	protected ArrayList<int[]> wordCountByTopicAndDocument;
-	protected ArrayList<int[]> wordCountByTopicAndTerm;
+	protected int[][] wordCountByTopicAndDocument;
+	protected int[][] wordCountByTopicAndTerm;
 	
 	
 	protected int sizeOfVocabulary;
@@ -32,14 +31,14 @@ public class GibbsState {
 		DOCState docState = docStates[docID];
 		int table = docState.words[i].tableAssignment;
 		int k = docState.tableToTopic[table];
-		docState.wordCountByTable[table]--; //, docState.wordCountByTable.get(table) - 1);
-		wordCountByTopic[k]--; //.set(k, wordCountByTopic.get(k) - 1);		
-		wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] -= 1;
-		wordCountByTopicAndDocument.get(k)[docState.docID] -= 1;
+		docState.wordCountByTable[table]--; 
+		wordCountByTopic[k]--; 		
+		wordCountByTopicAndTerm[k][docState.words[i].termIndex] --;
+		wordCountByTopicAndDocument[k][docState.docID] --;
 		if (docState.wordCountByTable[table] == 0) { // table is removed
 			totalNumberOfTables--; 
-			numberOfTablesByTopic[k]--; //.set(k, numberOfTablesByTopic.get(k) - 1);
-			docState.tableToTopic[table] = -1; 
+			numberOfTablesByTopic[k]--; 
+			docState.tableToTopic[table] --; 
 		}
 	}
 	
@@ -54,26 +53,23 @@ public class GibbsState {
 	protected void addWord(int docID, int i, int table, int k) {
 		DOCState docState = docStates[docID];
 		docState.words[i].tableAssignment = table; 
-		docState.wordCountByTable[table]++; //.set(, docState.wordCountByTable.get(table) + 1);
-		wordCountByTopic[k]++; //.set(k, wordCountByTopic.get(k) + 1);
-		wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] += 1;
-		wordCountByTopicAndDocument.get(k)[docState.docID] += 1;
+		docState.wordCountByTable[table]++; 
+		wordCountByTopic[k]++; 
+		wordCountByTopicAndTerm[k][docState.words[i].termIndex] ++;
+		wordCountByTopicAndDocument[k][docState.docID] ++;
 		if (docState.wordCountByTable[table] == 1) { // a new table is created
 			docState.numberOfTables++;
 			docState.tableToTopic[table] = k;
 			totalNumberOfTables++;
-			numberOfTablesByTopic[k]++; //.set(k, numberOfTablesByTopic.get(k) + 1);
+			numberOfTablesByTopic[k]++; 
 			docState.tableToTopic = Utils.ensureCapacity(docState.tableToTopic, docState.numberOfTables);
-//			docState.tableToTopic.add(-1);
 			docState.wordCountByTable = Utils.ensureCapacity(docState.wordCountByTable, docState.numberOfTables);
-//			docState.wordCountByTable.add(0);
 			if (k == numberOfTopics) { // a new topic is created
 				numberOfTopics++; 
 				numberOfTablesByTopic = Utils.ensureCapacity(numberOfTablesByTopic, numberOfTopics); 
 				wordCountByTopic = Utils.ensureCapacity(wordCountByTopic, numberOfTopics);
-				wordCountByTopicAndDocument.add(new int[docStates.length]);
-				wordCountByTopicAndTerm.add(new int[sizeOfVocabulary]);
-
+				wordCountByTopicAndDocument = Utils.add(wordCountByTopicAndDocument, new int[docStates.length], numberOfTopics);
+				wordCountByTopicAndTerm = Utils.add(wordCountByTopicAndTerm, new int[sizeOfVocabulary], numberOfTopics);
 			}
 		}
 	}
@@ -89,8 +85,8 @@ public class GibbsState {
 				kOldToKNew[k] = newNumberOfTopics;
 				Utils.swap(wordCountByTopic, newNumberOfTopics, k);
 				Utils.swap(numberOfTablesByTopic, newNumberOfTopics, k);
-				Collections.swap(wordCountByTopicAndDocument, newNumberOfTopics, k);
-				Collections.swap(wordCountByTopicAndTerm, newNumberOfTopics, k);
+				Utils.swap(wordCountByTopicAndDocument, newNumberOfTopics, k);
+				Utils.swap(wordCountByTopicAndTerm, newNumberOfTopics, k);
 				newNumberOfTopics++;
 			} 
 		}
@@ -108,9 +104,9 @@ public class GibbsState {
 		Collections.shuffle(h);
 		docStates = h.toArray(new DOCState[h.size()]);
 		for (int j = 0; j < docStates.length; j ++){
-			List<WordInfo> h2 = Arrays.asList(docStates[j].words);
+			List<WordState> h2 = Arrays.asList(docStates[j].words);
 			Collections.shuffle(h2);
-			docStates[j].words = h2.toArray(new WordInfo[h2.size()]);
+			docStates[j].words = h2.toArray(new WordState[h2.size()]);
 		}
 	}
 	
@@ -125,7 +121,7 @@ public class GibbsState {
 		PrintStream file = new PrintStream(name + "-topics.dat");
 		for (int k = 0; k < numberOfTopics; k++) {
 			for (int w = 0; w < sizeOfVocabulary; w++)
-				file.format("%05d ",wordCountByTopicAndTerm.get(k)[w]);
+				file.format("%05d ",wordCountByTopicAndTerm[k][w]);
 			file.println();
 		}
 		file.close();

@@ -29,10 +29,10 @@ class Utils {
 	}
 	
 	
-	public static void swap(int[] wordCountByTopic, int arg1, int arg2){
-		   int t = wordCountByTopic[arg1]; 
-		   wordCountByTopic[arg1] = wordCountByTopic[arg2]; 
-		   wordCountByTopic[arg2] = t; 
+	public static void swap(int[] arr, int arg1, int arg2){
+		   int t = arr[arg1]; 
+		   arr[arg1] = arr[arg2]; 
+		   arr[arg2] = t; 
 	}
 	
 	
@@ -54,6 +54,24 @@ class Utils {
 		for (int i = 0; i < length; i++) 
 			arr2[i] = arr[i];
 		return arr2;
+	}
+
+	public static void swap(int[][] arr, int arg1, int arg2) {
+		   int[] t = arr[arg1]; 
+		   arr[arg1] = arr[arg2]; 
+		   arr[arg2] = t; 
+	}
+
+	public static int[][] add(int[][] arr, int[] newElement, int where) {
+		int length = arr.length;
+		if (length <= where){
+			int[][] arr2 = new int[where*2][];
+			for (int i = 0; i < length; i++) 
+				arr2[i] = arr[i];
+			arr = arr2;
+		}
+		arr[where] = newElement;
+		return arr;
 	}
 	
 	

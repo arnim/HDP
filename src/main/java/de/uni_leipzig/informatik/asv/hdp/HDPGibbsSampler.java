@@ -30,11 +30,11 @@ public class HDPGibbsSampler extends GibbsState {
 		DOCState docState;
 		numberOfTablesByTopic = new int[numberOfTopics+1];
 		wordCountByTopic = new  int[numberOfTopics+1];
-		wordCountByTopicAndDocument = new ArrayList<int[]>();
-		wordCountByTopicAndTerm = new ArrayList<int[]>();
+		wordCountByTopicAndDocument = new int[numberOfTopics+1][];
+		wordCountByTopicAndTerm = new int[numberOfTopics+1][];
 		for (k = 0; k <= numberOfTopics; k++) {
-			wordCountByTopicAndDocument.add(new int[docStates.length]);
-			wordCountByTopicAndTerm.add(new int[sizeOfVocabulary]);
+			wordCountByTopicAndDocument[k] = new int[docStates.length];
+			wordCountByTopicAndTerm[k] = new int[sizeOfVocabulary];
 		}	// var initialization done
 		for (k = 0; k < numberOfTopics; k++) { 
 			docState = docStates[k];
@@ -115,7 +115,7 @@ public class HDPGibbsSampler extends GibbsState {
 		p = Utils.ensureCapacity(p, docState.numberOfTables);
 		fNew = gamma / sizeOfVocabulary;
 		for (k = 0; k < numberOfTopics; k++) {
-			f[k] = (wordCountByTopicAndTerm.get(k)[docState.words[i].termIndex] + beta) / 
+			f[k] = (wordCountByTopicAndTerm[k][docState.words[i].termIndex] + beta) / 
 					(wordCountByTopic[k] + sizeOfVocabulary * beta);
 			fNew += numberOfTablesByTopic[k] * f[k];
 		}
@@ -155,7 +155,7 @@ public class HDPGibbsSampler extends GibbsState {
 			iterate();
 			System.out.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
 					+ totalNumberOfTables );
-			if (saveLag != -1 && (iter % saveLag == 0)) 
+			if (saveLag != -1 && (iter > 0) && (iter % saveLag == 0)) 
 				saveState(directory + "/" + iter);
 		}
 	}

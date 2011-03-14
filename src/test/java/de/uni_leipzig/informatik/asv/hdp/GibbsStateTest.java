@@ -56,13 +56,13 @@ public class GibbsStateTest {
 		assertEquals(100, _state.sizeOfVocabulary); 
 		assertEquals(10, _state.docStates[10].docID); 
 		assertEquals(20, _state.docStates.length); 
-		assertTrue(_state.wordCountByTopic.get(0).equals(400)); 
-		assertTrue(_state.wordCountByTopic.get(1).equals(0)); 
-		assertEquals(2, _state.wordCountByTopic.size());  
-		assertEquals(_state.wordCountByTopic.size(), _state.wordCountByTopicAndDocument.size()); 
-		assertEquals(_state.wordCountByTopic.size(), _state.numberOfTablesByTopic.size()); 
-		assertEquals(_state.wordCountByTopic.size(), _state.wordCountByTopic.size()); 
-		assertEquals(_state.wordCountByTopic.size(), _state.wordCountByTopicAndTerm.size()); 
+		assertTrue(_state.wordCountByTopic[0]==400); 
+		assertTrue(_state.wordCountByTopic[1]==0); 
+		assertEquals(2, _state.wordCountByTopic.length);  
+		assertEquals(_state.wordCountByTopic.length, _state.wordCountByTopicAndDocument.length); 
+		assertEquals(_state.wordCountByTopic.length, _state.numberOfTablesByTopic.length); 
+		assertEquals(_state.wordCountByTopic.length, _state.wordCountByTopic.length); 
+		assertEquals(_state.wordCountByTopic.length, _state.wordCountByTopicAndTerm.length); 
 	}
 	
 	
@@ -75,7 +75,7 @@ public class GibbsStateTest {
 				counter[docState.words[w].tableAssignment] ++;
 			}
 			for (int t = 0; t < docState.numberOfTables; t++) {
-				int h = docState.wordCountByTable.get(t).intValue();
+				int h = docState.wordCountByTable[t];
 				assertEquals(h, counter[t]);
 				
 			}

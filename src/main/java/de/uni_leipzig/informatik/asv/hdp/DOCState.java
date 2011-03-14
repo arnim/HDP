@@ -1,7 +1,6 @@
 package de.uni_leipzig.informatik.asv.hdp;
 
-import java.util.ArrayList;
-import java.util.Collections;
+
 
 public class DOCState {
 	
@@ -11,14 +10,14 @@ public class DOCState {
 
 	int[] tableToTopic; // = new ArrayList<Integer>(); 
     int[] wordCountByTable;// = new ArrayList<Integer>(); 
-	WordInfo[] words;
+	WordState[] words;
 
 	
 	public DOCState(Document doc, int docID){  
 		this.docID = docID;
 	    numberOfTables = 0;  
 	    documentLength = doc.total;
-	    words = new WordInfo[documentLength];	
+	    words = new WordState[documentLength];	
 	    wordCountByTable = new int[2];
 	    tableToTopic = new int[2];
 	    int word, count, m = 0;
@@ -26,7 +25,7 @@ public class DOCState {
 	        word  = doc.words[n];
 	        count = doc.counts[n];
 	        for (int j = 0; j < count; j++) {
-	            words[m] = new WordInfo(word, -1);
+	            words[m] = new WordState(word, -1);
 	            m++;
 	        }
 	    }
