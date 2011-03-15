@@ -1,14 +1,13 @@
 package de.uni_leipzig.informatik.asv.hdp;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Random;
 
 public class HDPGibbsSampler extends GibbsState { 
 
 
 	public double beta  = 0.5; // default only
-	public double gamma = 1.0;
+	public double gamma = 1.5;
 	public double alpha = 1.0;
 	
 	private Random random = new Random();
@@ -99,7 +98,7 @@ public class HDPGibbsSampler extends GibbsState {
 	
 
 	/**	 
-	 * Decide to which table the word should be assigned to
+	 * Decide at which table the word should be assigned to
 	 * 
 	 * @param docID the index of the document of the current word
 	 * @param i the index of the current word
@@ -108,24 +107,21 @@ public class HDPGibbsSampler extends GibbsState {
 	 * @return the index of the table
 	 */
 	int sampleTable(int docID, int i) {	
-		DOCState docState = docStates[docID];
 		int k, j;
-		double pSum = 0.0, fk = 0.0, fNew, u;
+		double pSum = 0.0, vb = sizeOfVocabulary * beta, fNew, u;
+		DOCState docState = docStates[docID];
 		f = Utils.ensureCapacity(f, numberOfTopics);
 		p = Utils.ensureCapacity(p, docState.numberOfTables);
 		fNew = gamma / sizeOfVocabulary;
 		for (k = 0; k < numberOfTopics; k++) {
 			f[k] = (wordCountByTopicAndTerm[k][docState.words[i].termIndex] + beta) / 
-					(wordCountByTopic[k] + sizeOfVocabulary * beta);
+					(wordCountByTopic[k] + vb);
 			fNew += numberOfTablesByTopic[k] * f[k];
 		}
 		fNew = fNew / (totalNumberOfTables + gamma);
 		for (j = 0; j < docState.numberOfTables; j++) {
 			if (docState.wordCountByTable[j] > 0) 
-				fk = f[docState.tableToTopic[j]];
-			else
-				fk = 0.0;
-			pSum += docState.wordCountByTable[j] * fk;
+				pSum += docState.wordCountByTable[j] * f[docState.tableToTopic[j]];
 			p[j] = pSum;
 		}
 		pSum += alpha * fNew;

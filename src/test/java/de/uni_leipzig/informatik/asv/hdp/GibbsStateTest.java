@@ -43,7 +43,7 @@ public class GibbsStateTest {
 		assertEquals(.5, _state.beta, Double.MIN_VALUE);
 		assertEquals(1, _state.numberOfTopics); // initial number of topics
 		assertEquals(1, _state.numberOfTopics); // initial number of topics
-		assertEquals(1, _state.gamma, Double.MIN_VALUE); // initial number of topics
+		assertEquals(1.5, _state.gamma, Double.MIN_VALUE); // initial number of topics
 		assertEquals(1, _state.alpha, Double.MIN_VALUE); // initial number of topics
 	}
 	
@@ -98,7 +98,7 @@ public class GibbsStateTest {
 		_state.gamma = 1.0; 
 		_state.alpha = 1.0;
 		_state.initGibbsState(_corpus);
-		_state.run(_outputDir, true, 10, 1000, 10);
+		_state.run(_outputDir, true, 10, 1000, 1001);
 	}
 
 }
