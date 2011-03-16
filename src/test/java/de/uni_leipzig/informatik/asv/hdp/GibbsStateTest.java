@@ -15,7 +15,7 @@ public class GibbsStateTest {
 
 	private static Corpus _corpus;
 	private HDPGibbsSampler _state;
-	private String _outputDir = "/Users/arnim/Desktop/hdp/test/";;
+	private String _outputDir = "not/needed";
 
 
 	@BeforeClass
@@ -59,7 +59,6 @@ public class GibbsStateTest {
 		assertTrue(_state.wordCountByTopic[0]==400); 
 		assertTrue(_state.wordCountByTopic[1]==0); 
 		assertEquals(2, _state.wordCountByTopic.length);  
-		assertEquals(_state.wordCountByTopic.length, _state.wordCountByTopicAndDocument.length); 
 		assertEquals(_state.wordCountByTopic.length, _state.numberOfTablesByTopic.length); 
 		assertEquals(_state.wordCountByTopic.length, _state.wordCountByTopic.length); 
 		assertEquals(_state.wordCountByTopic.length, _state.wordCountByTopicAndTerm.length); 

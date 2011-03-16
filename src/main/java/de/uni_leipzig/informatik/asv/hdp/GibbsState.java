@@ -12,7 +12,6 @@ public class GibbsState {
 	protected DOCState[] docStates;
 	protected int[] numberOfTablesByTopic;
 	protected int[] wordCountByTopic;
-	protected int[][] wordCountByTopicAndDocument;
 	protected int[][] wordCountByTopicAndTerm;
 	
 	
@@ -34,7 +33,6 @@ public class GibbsState {
 		docState.wordCountByTable[table]--; 
 		wordCountByTopic[k]--; 		
 		wordCountByTopicAndTerm[k][docState.words[i].termIndex] --;
-		wordCountByTopicAndDocument[k][docState.docID] --;
 		if (docState.wordCountByTable[table] == 0) { // table is removed
 			totalNumberOfTables--; 
 			numberOfTablesByTopic[k]--; 
@@ -56,7 +54,6 @@ public class GibbsState {
 		docState.wordCountByTable[table]++; 
 		wordCountByTopic[k]++; 
 		wordCountByTopicAndTerm[k][docState.words[i].termIndex] ++;
-		wordCountByTopicAndDocument[k][docState.docID] ++;
 		if (docState.wordCountByTable[table] == 1) { // a new table is created
 			docState.numberOfTables++;
 			docState.tableToTopic[table] = k;
@@ -68,7 +65,6 @@ public class GibbsState {
 				numberOfTopics++; 
 				numberOfTablesByTopic = Utils.ensureCapacity(numberOfTablesByTopic, numberOfTopics); 
 				wordCountByTopic = Utils.ensureCapacity(wordCountByTopic, numberOfTopics);
-				wordCountByTopicAndDocument = Utils.add(wordCountByTopicAndDocument, new int[docStates.length], numberOfTopics);
 				wordCountByTopicAndTerm = Utils.add(wordCountByTopicAndTerm, new int[sizeOfVocabulary], numberOfTopics);
 			}
 		}
@@ -85,7 +81,6 @@ public class GibbsState {
 				kOldToKNew[k] = newNumberOfTopics;
 				Utils.swap(wordCountByTopic, newNumberOfTopics, k);
 				Utils.swap(numberOfTablesByTopic, newNumberOfTopics, k);
-				Utils.swap(wordCountByTopicAndDocument, newNumberOfTopics, k);
 				Utils.swap(wordCountByTopicAndTerm, newNumberOfTopics, k);
 				newNumberOfTopics++;
 			} 

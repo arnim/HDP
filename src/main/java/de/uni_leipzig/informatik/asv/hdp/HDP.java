@@ -17,8 +17,8 @@ public class HDP {
 		corpus.read(args[0]);
 		HDPGibbsSampler state = new HDPGibbsSampler();
 		
-		state.numberOfTopics = 100;
-		state.beta = .2;
+		state.numberOfTopics = 1;
+		state.beta = .1;
 		
 		state.initGibbsState(corpus);
 		
