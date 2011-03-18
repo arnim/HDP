@@ -1,7 +1,16 @@
+/*
+ * Copyright 2011 Arnim Bleier
+ * Licensed under the GNU Lesser General Public License.
+ * http://www.gnu.org/licenses/lgpl.html
+ */
+
 package de.uni_leipzig.informatik.asv.hdp;
 
 import java.io.FileNotFoundException;
 
+/**
+ * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
+ */
 public class HDP {
 
 
@@ -18,7 +27,7 @@ public class HDP {
 		HDPGibbsSampler state = new HDPGibbsSampler();
 		
 		state.numberOfTopics = 1;
-		state.beta = .1;
+		state.beta = .25;
 		
 		state.initGibbsState(corpus);
 		
@@ -27,7 +36,7 @@ public class HDP {
 		System.out.println("totalNumberOfWords="+state.totalNumberOfWords);
 		System.out.println("NumberOfDocs="+state.docStates.length);
 
-		state.run(args[1], true, 10, 2001, 100);
+		state.run(args[1], true, 10, 2001, 1000);
 
 	}
 

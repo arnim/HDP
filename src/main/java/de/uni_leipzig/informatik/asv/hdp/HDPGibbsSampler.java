@@ -1,8 +1,27 @@
+/*
+ * Copyright 2011 Arnim Bleier
+ * Licensed under the GNU Lesser General Public License.
+ * http://www.gnu.org/licenses/lgpl.html
+ */
+
 package de.uni_leipzig.informatik.asv.hdp;
 
 import java.io.FileNotFoundException;
 import java.util.Random;
 
+/**
+ * Hierarchical Dirichlet Processes  
+ * Chinese Restaurant Franchise Sampler
+ * 
+ * For more information on the algorithm see:
+ * Hierarchical Bayesian Nonparametric Models with Applications. 
+ * Y.W. Teh and M.I. Jordan. Bayesian Nonparametrics, 2010. Cambridge University Press.
+ * <a href="http://www.gatsby.ucl.ac.uk/~ywteh/research/npbayes/TehJor2010a.pdf"</a>
+ * 
+ * For other known implementations see README.txt
+ * 
+ * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
+ */
 public class HDPGibbsSampler extends GibbsState { 
 
 
@@ -53,7 +72,7 @@ public class HDPGibbsSampler extends GibbsState {
 	 * Step one step ahead
 	 * 
 	 */
-	protected void iterate() {
+	protected void nextGibbsSweep() {
 		int table;
 		for (int d = 0; d < docStates.length; d++) {
 			for (int i = 0; i < docStates[d].documentLength; i++) {
@@ -140,7 +159,7 @@ public class HDPGibbsSampler extends GibbsState {
 		for (int iter = 0; iter < maxIter; iter++) {
 			if (doShuffle && (iter > 0) && (iter % shuffleLag == 0))
 				doShuffle();
-			iterate();
+			nextGibbsSweep();
 			System.out.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
 					+ totalNumberOfTables );
 			if (saveLag != -1 && (iter > 0) && (iter % saveLag == 0)) 

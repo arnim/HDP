@@ -1,3 +1,9 @@
+/*
+ * Copyright 2011 Arnim Bleier
+ * Licensed under the GNU Lesser General Public License.
+ * http://www.gnu.org/licenses/lgpl.html
+ */
+
 package de.uni_leipzig.informatik.asv.hdp;
 
 import java.io.BufferedReader;
@@ -7,6 +13,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+/**
+ * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
+ */
 public class Corpus {
 
 	public int sizeVocabulary = 0;
