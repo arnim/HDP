@@ -4,22 +4,42 @@
  * http://www.gnu.org/licenses/lgpl.html
  */
 
-package de.uni_leipzig.informatik.asv.hdp;
+package de.uni_leipzig.informatik.asv.io;
 
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
  */
-public class Document {
+public class SVNDocument implements Document {
 
 	public int[] words = null;
 	public int[] counts = null;
 	public int numberOfUniquTerms = 0;
 	public int total = 0;
 
-	public Document(int len) {
+	public SVNDocument(int len) {
 		numberOfUniquTerms = len;
 		words = new int[numberOfUniquTerms];
 		counts = new int[numberOfUniquTerms];
+	}
+
+	@Override
+	public int getLength() {
+		return total;
+	}
+
+	@Override
+	public int getNumberOfUniquTerms() {
+		return numberOfUniquTerms;
+	}
+
+	@Override
+	public int getTerm(int n) {
+		return words[n];
+	}
+
+	@Override
+	public int getCount(int n) {
+		return counts[n];
 	}
 
 }

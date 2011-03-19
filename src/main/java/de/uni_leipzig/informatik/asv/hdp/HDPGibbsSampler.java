@@ -9,6 +9,8 @@ package de.uni_leipzig.informatik.asv.hdp;
 import java.io.FileNotFoundException;
 import java.util.Random;
 
+import de.uni_leipzig.informatik.asv.io.Corpus;
+
 /**
  * Hierarchical Dirichlet Processes  
  * Chinese Restaurant Franchise Sampler
@@ -16,7 +18,7 @@ import java.util.Random;
  * For more information on the algorithm see:
  * Hierarchical Bayesian Nonparametric Models with Applications. 
  * Y.W. Teh and M.I. Jordan. Bayesian Nonparametrics, 2010. Cambridge University Press.
- * <a href="http://www.gatsby.ucl.ac.uk/~ywteh/research/npbayes/TehJor2010a.pdf"</a>
+ * http://www.gatsby.ucl.ac.uk/~ywteh/research/npbayes/TehJor2010a.pdf
  * 
  * For other known implementations see README.txt
  * 
@@ -39,11 +41,11 @@ public class HDPGibbsSampler extends GibbsState {
 	 * @param corpus
 	 */
 	public void initGibbsState(Corpus corpus) {
-		sizeOfVocabulary = corpus.sizeVocabulary;
-		totalNumberOfWords = corpus.totalNumberOfWords;
-		docStates = new DOCState[corpus.docs.size()];
-		for (int d = 0; d < corpus.docs.size(); d++)
-			docStates[d] = new DOCState(corpus.docs.get(d), d);
+		sizeOfVocabulary = corpus.getVocabularySize();
+		totalNumberOfWords = corpus.getTotalNumberOfWords();
+		docStates = new DOCState[corpus.size()];
+		for (int d = 0; d < corpus.size(); d++)
+			docStates[d] = new DOCState(corpus.get(d), d);
 		int k, i, j;
 		DOCState docState;
 		p = new double[20]; 

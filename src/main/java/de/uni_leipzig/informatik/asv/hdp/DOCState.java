@@ -6,6 +6,8 @@
 
 package de.uni_leipzig.informatik.asv.hdp;
 
+import de.uni_leipzig.informatik.asv.io.Document;
+
 
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
@@ -16,22 +18,22 @@ public class DOCState {
 	
 	int docID, documentLength, numberOfTables;
 
-	int[] tableToTopic; // = new ArrayList<Integer>(); 
-    int[] wordCountByTable;// = new ArrayList<Integer>(); 
+	int[] tableToTopic; 
+    int[] wordCountByTable;
 	WordState[] words;
 
 	
 	public DOCState(Document doc, int docID){  
 		this.docID = docID;
 	    numberOfTables = 0;  
-	    documentLength = doc.total;
+	    documentLength = doc.getLength();
 	    words = new WordState[documentLength];	
 	    wordCountByTable = new int[2];
 	    tableToTopic = new int[2];
 	    int word, count, m = 0;
-	    for (int n = 0; n < doc.numberOfUniquTerms; n++) {
-	        word  = doc.words[n];
-	        count = doc.counts[n];
+	    for (int n = 0; n < doc.getNumberOfUniquTerms(); n++) {
+	        word  = doc.getTerm(n);
+	        count = doc.getCount(n);
 	        for (int j = 0; j < count; j++) {
 	            words[m] = new WordState(word, -1);
 	            m++;

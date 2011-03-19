@@ -17,19 +17,21 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import de.uni_leipzig.informatik.asv.io.SVNCorpus;
+
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
  */
 public class GibbsStateTest {
 
-	private static Corpus _corpus;
+	private static SVNCorpus _corpus;
 	private HDPGibbsSampler _state;
 	private String _outputDir = "not/needed";
 
 
 	@BeforeClass
 	public static void setUpBefore() throws Exception {
-		_corpus = new Corpus();
+		_corpus = new SVNCorpus();
 		_corpus.read(_corpus.getClass().getResourceAsStream("test.corpus"));
 	}
 
@@ -41,7 +43,7 @@ public class GibbsStateTest {
 
 	@Test
 	public void testCorpus() throws FileNotFoundException {
-		assertEquals(20, _corpus.docs.size());
+		assertEquals(20, _corpus.size());
 		assertEquals(100, _corpus.sizeVocabulary);
 		assertEquals(400, _corpus.totalNumberOfWords);
 	}
@@ -106,7 +108,7 @@ public class GibbsStateTest {
 		_state.gamma = 1.0; 
 		_state.alpha = 1.0;
 		_state.initGibbsState(_corpus);
-		_state.run(_outputDir, true, 10, 1000, 1001);
+		_state.run(_outputDir, true, 10, 1000, 4001);
 	}
 
 }

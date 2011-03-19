@@ -8,6 +8,9 @@ package de.uni_leipzig.informatik.asv.hdp;
 
 import java.io.FileNotFoundException;
 
+import de.uni_leipzig.informatik.asv.io.Corpus;
+import de.uni_leipzig.informatik.asv.io.SVNCorpus;
+
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
  */
@@ -22,12 +25,12 @@ public class HDP {
 		}
 		
 
-		Corpus corpus = new Corpus();
-		corpus.read(args[0]);
+		Corpus corpus = new SVNCorpus();
+		((SVNCorpus) corpus).read(args[0]);
 		HDPGibbsSampler state = new HDPGibbsSampler();
 		
 		state.numberOfTopics = 1;
-		state.beta = .25;
+		state.beta = .05;
 		
 		state.initGibbsState(corpus);
 		

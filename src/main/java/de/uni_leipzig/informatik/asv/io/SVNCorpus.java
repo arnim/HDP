@@ -4,7 +4,7 @@
  * http://www.gnu.org/licenses/lgpl.html
  */
 
-package de.uni_leipzig.informatik.asv.hdp;
+package de.uni_leipzig.informatik.asv.io;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -13,21 +13,23 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
  */
-public class Corpus {
+public class SVNCorpus extends ArrayList<Document> implements Corpus   {
+	
 
+	private static final long serialVersionUID = -8568648610437635401L;
 	public int sizeVocabulary = 0;
 	public int totalNumberOfWords = 0;
-	public ArrayList<Document> docs;
+
 	
 	
 	public void read(InputStream is) {
 		int length, word;
-		Document d;
+		SVNDocument d;
 		try {
-			docs = new ArrayList<Document>();
 			BufferedReader br = new BufferedReader(new InputStreamReader(is,
 					"UTF-8"));
 			String line = null;
@@ -35,7 +37,7 @@ public class Corpus {
 				try {
 					String[] fields = line.split(" ");
 					length = Integer.parseInt(fields[0]);
-					d = new Document(length);
+					d = new SVNDocument(length);
 					for (int n = 0; n < length; n++) {
 						String[] wordCounts = fields[n + 1].split(":");
 						word = Integer.parseInt(wordCounts[0]);
@@ -46,7 +48,7 @@ public class Corpus {
 							sizeVocabulary = word + 1;
 					}
 					totalNumberOfWords += d.total;
-					docs.add(d);
+					add(d);
 				} catch (Exception e) {
 					System.err.println(e.getMessage() + "\n");
 				}
@@ -59,5 +61,18 @@ public class Corpus {
 	public void read(String filename) throws FileNotFoundException {
 		read(new FileInputStream(filename));
 	}
+
+
+	@Override
+	public int getVocabularySize() {
+		return sizeVocabulary;
+	}
+
+	@Override
+	public int getTotalNumberOfWords() {
+		return totalNumberOfWords;
+	}
+
+
 
 }
