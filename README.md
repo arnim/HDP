@@ -1,7 +1,7 @@
 Java Gibbs sampler for the Hierarchical Dirichlet Processes 
 ===========================================================
 
-This is a partial Java 1.6 port of [Chong Wang's](http://www.cs.princeton.edu/~chongw/) C implementation [Hierarchical Dirichlet processes for text](http://www.cs.princeton.edu/~blei/topicmodeling.html)
+This is a partial Java 1.6 port of [Chong Wang's](http://www.cs.princeton.edu/~chongw/) C implementation [Hierarchical Dirichlet processes for text](http://www.cs.princeton.edu/~chongw/software/hdp.tar.gz)
 
 The algorithm 
 -------------
@@ -14,8 +14,8 @@ The algorithm for the Chinese Restaurant Franchise Sampler is described in:
 
 Other similar software
 ----------------------
-http://www.gatsby.ucl.ac.uk/~ywteh/research/software.html (by Yee Whye Teh) MATLAB and C
-http://www.arbylon.net/resources.html (by Gregor Heinrich) Java
+* http://www.gatsby.ucl.ac.uk/~ywteh/research/software.html (by Yee Whye Teh) MATLAB and C
+* http://www.arbylon.net/resources.html (by Gregor Heinrich) Java
 
 
 License
