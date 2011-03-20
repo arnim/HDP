@@ -12,12 +12,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import de.uni_leipzig.informatik.asv.io.CLDACorpus;
+import de.uni_leipzig.informatik.asv.io.TopicsFileWriter;
+import de.uni_leipzig.informatik.asv.io.WordAssignmentsFileWriter;
 
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
@@ -102,13 +105,13 @@ public class GibbsStateTest {
 	
 	
 	@Test
-	public void testHDPGibbsSampler() throws FileNotFoundException {
+	public void testHDPGibbsSampler() throws IOException {
 		_state.beta = 0.5;
 		_state.numberOfTopics = 4;
 		_state.gamma = 1.0; 
 		_state.alpha = 1.0;
 		_state.initGibbsState(_corpus);
-		_state.run(_outputDir, true, 10, 1000, 4001, System.out);
+		_state.run(true, 10, 1000, 4001, System.out, new TopicsFileWriter(_outputDir), new WordAssignmentsFileWriter(_outputDir));
 	}
 
 }
