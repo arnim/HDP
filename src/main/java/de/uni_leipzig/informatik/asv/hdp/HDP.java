@@ -20,29 +20,37 @@ public class HDP {
 
 
 	public static void main(String[] args) throws IOException {
-		if (args.length!=2) {
-			System.out.println("The application needs to params.");
-			System.out.println("Use program arguments: src.corpus ~target/");;
-			return;
+		 int saveLag = 0, iter = 0;
+		 String inputFile = null, outputDir = null;
+		 Corpus corpus = new CLDACorpus();
+		 HDPGibbsSampler state = new HDPGibbsSampler();
+		try {
+			state.beta = Double.parseDouble(args[0]);
+			state.alpha = Double.parseDouble(args[1]);
+			state.gamma = Double.parseDouble(args[2]);
+			iter = Integer.parseInt(args[3]);
+			saveLag = Integer.parseInt(args[4]);
+			inputFile = args[5];
+			outputDir = args[6];
+			state.numberOfTopics = Integer.parseInt(args[7]);
+		} catch (Exception e) {
+			System.out.println("CRF Gibbs sampling for the Hierarchical Dirichlet Processes");
+			System.out.println("The application nees the folowing params in exact order");
+			System.out.println("beta alpha gamma iterations saveLag inputFile outputDir initialNumberOfTOpics");
+			System.out.println("Example:");
+			System.out.println("HDP 0.5 1.5 1.0 2001 500 ./input.corpus ./outputdir/ 5");
+			System.exit(0);
 		}
 		
-
-		Corpus corpus = new CLDACorpus();
-		((CLDACorpus) corpus).read(args[0]);
-		HDPGibbsSampler state = new HDPGibbsSampler();
-		
-		state.numberOfTopics = 1;
-		state.beta = .5;
-		
+		((CLDACorpus) corpus).read(inputFile);
 		state.initGibbsState(corpus);
 		
-		System.out.println("numberOfTopics="+state.numberOfTopics);
 		System.out.println("sizeOfVocabulary="+state.sizeOfVocabulary);
 		System.out.println("totalNumberOfWords="+state.totalNumberOfWords);
 		System.out.println("NumberOfDocs="+state.docStates.length);
 
-		state.run(true, 10, 2001, 1000, System.out, new TopicsFileWriter(args[1]), new WordAssignmentsFileWriter(args[1]));
-
+		state.run(true, 10, iter, saveLag, System.out, 
+				new TopicsFileWriter(outputDir), new WordAssignmentsFileWriter(outputDir));
 	}
 
 }
