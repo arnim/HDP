@@ -20,5 +20,5 @@ Other similar software
 
 License
 -------
-Written by [Arnim Bleier](mailto:arnim.bleier+hdp@gmail.com). 
+Written by [Arnim Bleier](mailto:arnim.bleier@gmail.com). 
 Licensed under the [GNU Lesser General Public License](http://www.gnu.org/licenses/lgpl.html)
