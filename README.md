@@ -21,7 +21,6 @@ The closest related software is [Chong Wang's](http://www.cs.princeton.edu/~chon
 * http://www.arbylon.net/resources.html (by Gregor Heinrich) Java
 
 
-License
--------
-Written by [Arnim Bleier](mailto:arnim.bleier@gmail.com). 
-Licensed under the [GNU Lesser General Public License](http://www.gnu.org/licenses/lgpl.html)
+Licensed
+--------
+under the [GNU Lesser General Public License](http://www.gnu.org/licenses/lgpl.html)
