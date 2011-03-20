@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Arnim Bleier
+ * Copyright 2011 Arnim Bleier, Andreas Niekler and Patrick Jaehnichen
  * Licensed under the GNU Lesser General Public License.
  * http://www.gnu.org/licenses/lgpl.html
  */
@@ -15,9 +15,22 @@ import java.util.ArrayList;
 
 
 /**
+ * Reader for data following the format described by <a href="http://www.cs.princeton.edu/~blei/">David Blei</a> 
+ * in the <a href="http://www.cs.princeton.edu/~blei/lda-c/readme.txt">lda-c/readme.txt</a>
+ * "Under LDA, the words of each document are assumed exchangeable. Thus, 
+ * each document is succinctly represented as a sparse vector of word 
+ * counts. The data is a file where each line is of the form:
+ * 
+ *   [M] [term_1]:[count] [term_2]:[count] ...  [term_N]:[count] 
+ * 
+ * where [M] is the number of unique terms in the document, and the 
+ * [count] associated with each term is how many times that term appeared 
+ * in the document.  Note that [term_1] is an integer which indexes the 
+ * term; it is not a string."
+ * <p>
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
  */
-public class SVNCorpus extends ArrayList<Document> implements Corpus   {
+public class CLDACorpus extends ArrayList<Document> implements Corpus   {
 	
 
 	private static final long serialVersionUID = -8568648610437635401L;
@@ -28,7 +41,7 @@ public class SVNCorpus extends ArrayList<Document> implements Corpus   {
 	
 	public void read(InputStream is) {
 		int length, word;
-		SVNDocument d;
+		SimpleDocument d;
 		try {
 			BufferedReader br = new BufferedReader(new InputStreamReader(is,
 					"UTF-8"));
@@ -37,7 +50,7 @@ public class SVNCorpus extends ArrayList<Document> implements Corpus   {
 				try {
 					String[] fields = line.split(" ");
 					length = Integer.parseInt(fields[0]);
-					d = new SVNDocument(length);
+					d = new SimpleDocument(length);
 					for (int n = 0; n < length; n++) {
 						String[] wordCounts = fields[n + 1].split(":");
 						word = Integer.parseInt(wordCounts[0]);

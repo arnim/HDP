@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Arnim Bleier
+ * Copyright 2011 Arnim Bleier, Andreas Niekler and Patrick Jaehnichen
  * Licensed under the GNU Lesser General Public License.
  * http://www.gnu.org/licenses/lgpl.html
  */

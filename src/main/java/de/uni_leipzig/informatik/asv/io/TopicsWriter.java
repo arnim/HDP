@@ -4,21 +4,15 @@
  * http://www.gnu.org/licenses/lgpl.html
  */
 
-package de.uni_leipzig.informatik.asv.hdp;
+package de.uni_leipzig.informatik.asv.io;
+
+import java.io.IOException;
 
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
  */
-public class WordState {   
+public interface TopicsWriter {
 	
-	int termIndex;
-	int tableAssignment;
-
-	
-	public WordState(int wordIndex, int tableAssignment){
-		this.termIndex = wordIndex;
-		this.tableAssignment = tableAssignment;
-	}
-
+	public void writeWordCountByTopicAndTerm(int[][] wordCountByTopicAndTerm, int K, int V, int iter) throws IOException;
 
 }

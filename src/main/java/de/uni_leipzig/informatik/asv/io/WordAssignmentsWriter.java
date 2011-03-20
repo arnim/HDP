@@ -3,19 +3,20 @@
  * Licensed under the GNU Lesser General Public License.
  * http://www.gnu.org/licenses/lgpl.html
  */
+
 package de.uni_leipzig.informatik.asv.io;
+
+import java.io.IOException;
 
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
  */
-public interface Document {
+public interface WordAssignmentsWriter {
 	
-	public int getLength();
+	public void openForIteration(int iter) throws IOException;
 	
-	public int getNumberOfUniquTerms();
+	public void writeAssignment(int docID, int term, int topic, int table) throws IOException;
 	
-	public int getTerm(int n);
-	
-	public int getCount(int n);
+	public void closeIteration() throws IOException;
 
 }

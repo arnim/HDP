@@ -1,16 +1,18 @@
 /*
- * Copyright 2011 Arnim Bleier
+ * Copyright 2011 Arnim Bleier, Andreas Niekler and Patrick Jaehnichen
  * Licensed under the GNU Lesser General Public License.
  * http://www.gnu.org/licenses/lgpl.html
  */
 
 package de.uni_leipzig.informatik.asv.hdp;
 
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import de.uni_leipzig.informatik.asv.io.TopicsWriter;
+import de.uni_leipzig.informatik.asv.io.WordAssignmentsWriter;
 
 /**
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
@@ -116,33 +118,26 @@ public class GibbsState {
 	
 	
 	/**
-	 * Writes the current topic and table assignments on disc
+	 * Writes the current topic and table assignments
 	 * 
-	 * @param name
-	 * @throws FileNotFoundException
+	 * @param wordAssignmentsFileWriter 
+	 * @param topicsWriter 
+	 * @param iter 
+	 * @throws IOException 
 	 */
-	protected void saveState(String name) throws FileNotFoundException  {
-		PrintStream file = new PrintStream(name + "-topics.dat");
-		for (int k = 0; k < numberOfTopics; k++) {
-			for (int w = 0; w < sizeOfVocabulary; w++)
-				file.format("%05d ",wordCountByTopicAndTerm[k][w]);
-			file.println();
-		}
-		file.close();
-		file = new PrintStream(name + "-word-assignments.dat");
-		file.println("d w z t");
+	protected void saveState(int iter, TopicsWriter topicsWriter, WordAssignmentsWriter wordAssignmentsWriter) throws IOException  {
+		topicsWriter.writeWordCountByTopicAndTerm(wordCountByTopicAndTerm, numberOfTopics, sizeOfVocabulary, iter);
+		wordAssignmentsWriter.openForIteration(iter);
 		int t, docID;
 		for (int d = 0; d < docStates.length; d++) {
-			DOCState d_state = docStates[d];
-			docID = d_state.docID;
-			for (int i = 0; i < d_state.documentLength; i++) {
-				t = d_state.words[i].tableAssignment;
-				file.println(docID + " " + 
-						d_state.words[i].termIndex + " " + 
-						d_state.tableToTopic[t] + " " + t);
+			DOCState docState = docStates[d];
+			docID = docState.docID;
+			for (int i = 0; i < docState.documentLength; i++) {
+				t = docState.words[i].tableAssignment;
+				wordAssignmentsWriter.writeAssignment(docID, docState.words[i].termIndex, docState.tableToTopic[t], t);
 			}
 		}
-		file.close();
+		wordAssignmentsWriter.closeIteration();
 	}
 	
 	

@@ -1,0 +1,52 @@
+<h1 id="javagibbssamplerforthehierarchicaldirichletprocesses">Java Gibbs sampler for the Hierarchical Dirichlet Processes </h1>
+
+<p>This is a partial Java 1.6 port of <a href="http://www.cs.princeton.edu/~chongw/">Chong Wang&#8217;s</a> C implementation <a href="http://www.cs.princeton.edu/~blei/topicmodeling.html">Hierarchical Dirichlet processes for text</a></p>
+
+<h2 id="thealgorithm">The algorithm </h2>
+
+<p>The algorithm for the Chinese Restaurant Franchise Sampler is described in:</p>
+
+<pre><code>Hierarchical Bayesian Nonparametric Models with Applications. 
+Y.W. Teh and M.I. Jordan. Bayesian Nonparametrics, 2010. Cambridge University Press.
+http://www.gatsby.ucl.ac.uk/~ywteh/research/npbayes/TehJor2010a.pdf
+</code></pre>
+
+<h2 id="usage">Usage</h2>
+
+<h3 id="aslibary">As Libary</h3>
+
+<p>Obtain a copy</p>
+
+<pre><code>git clone git@github.com:arnim/HDP.git
+</code></pre>
+
+<p>If you use <a href="http://maven.apache.org/">Maven</a>, you can install it to your lacal repository</p>
+
+<pre><code>cd HDP
+mvn install
+</code></pre>
+
+<p>and add it to the dependencies of your project</p>
+
+<pre><code>&lt;dependencies&gt;
+..
+    &lt;dependency&gt;
+        &lt;groupId&gt;de.uni-leipzig.informatik.asv&lt;/groupId&gt;
+        &lt;artifactId&gt;hdp&lt;/artifactId&gt;
+        &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;/dependency&gt;
+..
+&lt;/dependencies&gt;
+</code></pre>
+
+<h3 id="command-line">Command-line</h3>
+
+<h2 id="similarsoftware:">Similar software:</h2>
+
+<p>http://www.gatsby.ucl.ac.uk/~ywteh/research/software.html (by Yee Whye Teh) MATLAB and C
+http://www.arbylon.net/resources.html (by Gregor Heinrich) Java</p>
+
+<h2 id="license">License</h2>
+
+<p>Written by <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>. 
+Licensed under the <a href="http://www.gnu.org/licenses/lgpl.html">GNU Lesser General Public License</a></p>

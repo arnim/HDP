@@ -1,15 +1,18 @@
 /*
- * Copyright 2011 Arnim Bleier
+ * Copyright 2011 Arnim Bleier, Andreas Niekler and Patrick Jaehnichen
  * Licensed under the GNU Lesser General Public License.
  * http://www.gnu.org/licenses/lgpl.html
  */
 
 package de.uni_leipzig.informatik.asv.hdp;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Random;
 
 import de.uni_leipzig.informatik.asv.io.Corpus;
+import de.uni_leipzig.informatik.asv.io.TopicsWriter;
+import de.uni_leipzig.informatik.asv.io.WordAssignmentsWriter;
 
 /**
  * Hierarchical Dirichlet Processes  
@@ -38,7 +41,7 @@ public class HDPGibbsSampler extends GibbsState {
 	/**
 	 * Initially assign the words to tables and topics
 	 * 
-	 * @param corpus
+	 * @param corpus {@link Corpus} on which to fit the model
 	 */
 	public void initGibbsState(Corpus corpus) {
 		sizeOfVocabulary = corpus.getVocabularySize();
@@ -148,24 +151,26 @@ public class HDPGibbsSampler extends GibbsState {
 
 
 	/**
+	 * Method to call for fitting the model.
 	 * 
-	 * @param directory
 	 * @param doShuffle
 	 * @param shuffleLag
-	 * @param maxIter
-	 * @param saveLag
-	 * @throws FileNotFoundException
+	 * @param maxIter number of iterations to run
+	 * @param saveLag save interval 
+	 * @param wordAssignmentsWriter {@link WordAssignmentsWriter}
+	 * @param topicsWriter {@link TopicsWriter}
+	 * @throws IOException 
 	 */
-	public void run(String directory, boolean doShuffle, int shuffleLag, int maxIter, int saveLag) 
-	throws FileNotFoundException {
+	public void run(boolean doShuffle, int shuffleLag, int maxIter, int saveLag, PrintStream log, TopicsWriter topicsWriter, WordAssignmentsWriter wordAssignmentsWriter) 
+	throws IOException {
 		for (int iter = 0; iter < maxIter; iter++) {
 			if (doShuffle && (iter > 0) && (iter % shuffleLag == 0))
 				doShuffle();
 			nextGibbsSweep();
-			System.out.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
+			log.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
 					+ totalNumberOfTables );
 			if (saveLag != -1 && (iter > 0) && (iter % saveLag == 0)) 
-				saveState(directory + "/" + iter);
+				saveState(iter, topicsWriter, wordAssignmentsWriter);
 		}
 	}
 
