@@ -1,7 +1,7 @@
 Java Gibbs sampler for the Hierarchical Dirichlet Processes 
 ===========================================================
 
-This is a Java 1.6 implementation of a Chinese Restaurant Franchise Gibbs Sampler, a Bayesian Nonparametric [Topic model](http://www.cs.princeton.edu/~blei/topicmodeling.html)
+This is a Java 1.6 implementation of a Chinese Restaurant Franchise Gibbs Sampler, a Bayesian Nonparametric [Topic model](http://www.cs.princeton.edu/~blei/topicmodeling.html) fitter.
 
 The algorithm 
 -------------
