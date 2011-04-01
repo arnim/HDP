@@ -6,12 +6,21 @@
 
 package de.uni_leipzig.informatik.asv.hdp;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
-import de.uni_leipzig.informatik.asv.io.Corpus;
+import cc.mallet.types.FeatureSequence;
+import cc.mallet.types.Instance;
+import cc.mallet.types.InstanceList;
+
+import de.uni_leipzig.informatik.asv.io.TopicsFileWriter;
 import de.uni_leipzig.informatik.asv.io.TopicsWriter;
+import de.uni_leipzig.informatik.asv.io.WordAssignmentsFileWriter;
 import de.uni_leipzig.informatik.asv.io.WordAssignmentsWriter;
 
 /**
@@ -27,7 +36,7 @@ import de.uni_leipzig.informatik.asv.io.WordAssignmentsWriter;
  * 
  * @author <a href="mailto:arnim.bleier+hdp@gmail.com">Arnim Bleier</a>
  */
-public class HDPGibbsSampler extends GibbsState { 
+public class HDPGibbsSampler { 
 
 
 	public double beta  = 0.5; // default only
@@ -37,18 +46,34 @@ public class HDPGibbsSampler extends GibbsState {
 	private Random random = new Random();
 	private double[] p;
 	private double[] f;
+	
+	protected DOCState[] docStates;
+	protected int[] numberOfTablesByTopic;
+	protected int[] wordCountByTopic;
+	protected int[][] wordCountByTopicAndTerm;
+	
+	
+	protected int sizeOfVocabulary;
+	protected int totalNumberOfWords;
+	protected int numberOfTopics = 1;
+	protected int totalNumberOfTables;
+	
 
 	/**
 	 * Initially assign the words to tables and topics
 	 * 
 	 * @param corpus {@link Corpus} on which to fit the model
 	 */
-	public void initGibbsState(Corpus corpus) {
-		sizeOfVocabulary = corpus.getVocabularySize();
-		totalNumberOfWords = corpus.getTotalNumberOfWords();
+	public void addInstances(InstanceList corpus) {
+		sizeOfVocabulary = corpus.getDataAlphabet().size();
+		totalNumberOfWords = 0;
 		docStates = new DOCState[corpus.size()];
-		for (int d = 0; d < corpus.size(); d++)
+		for (int d = 0; d < corpus.size(); d++) {
 			docStates[d] = new DOCState(corpus.get(d), d);
+			FeatureSequence tokens = (FeatureSequence) corpus.get(d).getData();
+			for (int position = 0; position < tokens.getLength(); position++) 
+				totalNumberOfWords++;	
+		}
 		int k, i, j;
 		DOCState docState;
 		p = new double[20]; 
@@ -172,6 +197,206 @@ public class HDPGibbsSampler extends GibbsState {
 			if (saveLag != -1 && (iter > 0) && (iter % saveLag == 0)) 
 				saveState(iter, topicsWriter, wordAssignmentsWriter);
 		}
+	}
+	
+	
+	
+	
+	/**
+	 * Removes a word from the bookkeeping
+	 * 
+	 * @param docID the id of the document the word belongs to 
+	 * @param i the index of the word
+	 */
+	protected void removeWord(int docID, int i){
+		DOCState docState = docStates[docID];
+		int table = docState.words[i].tableAssignment;
+		int k = docState.tableToTopic[table];
+		docState.wordCountByTable[table]--; 
+		wordCountByTopic[k]--; 		
+		wordCountByTopicAndTerm[k][docState.words[i].termIndex] --;
+		if (docState.wordCountByTable[table] == 0) { // table is removed
+			totalNumberOfTables--; 
+			numberOfTablesByTopic[k]--; 
+			docState.tableToTopic[table] --; 
+		}
+	}
+	
+	/**
+	 * Add a word to the bookkeeping
+	 * 
+	 * @param docID	docID the id of the document the word belongs to 
+	 * @param i the index of the word
+	 * @param table the table to which the word is assigned to
+	 * @param k the topic to which the word is assigned to
+	 */
+	protected void addWord(int docID, int i, int table, int k) {
+		DOCState docState = docStates[docID];
+		docState.words[i].tableAssignment = table; 
+		docState.wordCountByTable[table]++; 
+		wordCountByTopic[k]++; 
+		wordCountByTopicAndTerm[k][docState.words[i].termIndex] ++;
+		if (docState.wordCountByTable[table] == 1) { // a new table is created
+			docState.numberOfTables++;
+			docState.tableToTopic[table] = k;
+			totalNumberOfTables++;
+			numberOfTablesByTopic[k]++; 
+			docState.tableToTopic = Utils.ensureCapacity(docState.tableToTopic, docState.numberOfTables);
+			docState.wordCountByTable = Utils.ensureCapacity(docState.wordCountByTable, docState.numberOfTables);
+			if (k == numberOfTopics) { // a new topic is created
+				numberOfTopics++; 
+				numberOfTablesByTopic = Utils.ensureCapacity(numberOfTablesByTopic, numberOfTopics); 
+				wordCountByTopic = Utils.ensureCapacity(wordCountByTopic, numberOfTopics);
+				wordCountByTopicAndTerm = Utils.add(wordCountByTopicAndTerm, new int[sizeOfVocabulary], numberOfTopics);
+			}
+		}
+	}
+
+	/**
+	 * Removes topics from the bookkeeping that have no words assigned to
+	 */
+	protected void defragment() {
+		int[] kOldToKNew = new int[numberOfTopics];
+		int k, newNumberOfTopics = 0;
+		for (k = 0; k < numberOfTopics; k++) {
+			if (wordCountByTopic[k] > 0) {
+				kOldToKNew[k] = newNumberOfTopics;
+				Utils.swap(wordCountByTopic, newNumberOfTopics, k);
+				Utils.swap(numberOfTablesByTopic, newNumberOfTopics, k);
+				Utils.swap(wordCountByTopicAndTerm, newNumberOfTopics, k);
+				newNumberOfTopics++;
+			} 
+		}
+		numberOfTopics = newNumberOfTopics;
+		for (int j = 0; j < docStates.length; j++) 
+			docStates[j].defragment(kOldToKNew);
+	}
+	
+	
+	/**
+	 * Permute the ordering of documents and words in the bookkeeping
+	 */
+	protected void doShuffle(){
+		List<DOCState> h = Arrays.asList(docStates);
+		Collections.shuffle(h);
+		docStates = h.toArray(new DOCState[h.size()]);
+		for (int j = 0; j < docStates.length; j ++){
+			List<WordState> h2 = Arrays.asList(docStates[j].words);
+			Collections.shuffle(h2);
+			docStates[j].words = h2.toArray(new WordState[h2.size()]);
+		}
+	}
+	
+	
+	/**
+	 * Writes the current topic and table assignments
+	 * 
+	 * @param wordAssignmentsFileWriter 
+	 * @param topicsWriter 
+	 * @param iter 
+	 * @throws IOException 
+	 */
+	protected void saveState(int iter, TopicsWriter topicsWriter, WordAssignmentsWriter wordAssignmentsWriter) throws IOException  {
+		topicsWriter.writeWordCountByTopicAndTerm(wordCountByTopicAndTerm, numberOfTopics, sizeOfVocabulary, iter);
+		wordAssignmentsWriter.openForIteration(iter);
+		int t, docID;
+		for (int d = 0; d < docStates.length; d++) {
+			DOCState docState = docStates[d];
+			docID = docState.docID;
+			for (int i = 0; i < docState.documentLength; i++) {
+				t = docState.words[i].tableAssignment;
+				wordAssignmentsWriter.writeAssignment(docID, docState.words[i].termIndex, docState.tableToTopic[t], t);
+			}
+		}
+		wordAssignmentsWriter.closeIteration();
+	}
+	
+	
+	class DOCState {
+		
+		int docID, documentLength, numberOfTables;
+		int[] tableToTopic; 
+	    int[] wordCountByTable;
+		WordState[] words;
+
+		public DOCState(Instance instance, int docID) {
+			this.docID = docID;
+		    numberOfTables = 0;  
+		    FeatureSequence tokens = (FeatureSequence) instance.getData();
+		    documentLength = tokens.getLength();
+		    words = new WordState[documentLength];	
+		    wordCountByTable = new int[2];
+		    tableToTopic = new int[2];
+			for (int position = 0; position < documentLength; position++) 
+				words[position] = new WordState(tokens.getIndexAtPosition(position), -1);
+		}
+
+
+		public void defragment(int[] kOldToKNew) {
+		    int[] tOldToTNew = new int[numberOfTables];
+		    int t, newNumberOfTables = 0;
+		    for (t = 0; t < numberOfTables; t++){
+		        if (wordCountByTable[t] > 0){
+		            tOldToTNew[t] = newNumberOfTables;
+		            tableToTopic[newNumberOfTables] = kOldToKNew[tableToTopic[t]];
+		            Utils.swap(wordCountByTable, newNumberOfTables, t);
+		            newNumberOfTables ++;
+		        } else 
+		        	tableToTopic[t] = -1;
+		    }
+		    numberOfTables = newNumberOfTables;
+		    for (int i = 0; i < documentLength; i++)
+		        words[i].tableAssignment = tOldToTNew[words[i].tableAssignment];
+		}
+
+	}
+	
+	
+	class WordState {   
+	
+		int termIndex;
+		int tableAssignment;
+		
+		public WordState(int wordIndex, int tableAssignment){
+			this.termIndex = wordIndex;
+			this.tableAssignment = tableAssignment;
+		}
+
+	}
+	
+	
+	public static void main(String[] args) throws IOException {
+		 int saveLag = 0, iter = 0;
+		 String inputFile = null, outputDir = null;
+		 HDPGibbsSampler state = new HDPGibbsSampler();
+		 
+		try {
+			state.beta = Double.parseDouble(args[0]);
+			state.alpha = Double.parseDouble(args[1]);
+			state.gamma = Double.parseDouble(args[2]);
+			iter = Integer.parseInt(args[3]);
+			saveLag = Integer.parseInt(args[4]);
+			inputFile = args[5];
+			outputDir = args[6];
+			state.numberOfTopics = Integer.parseInt(args[7]);
+		} catch (Exception e) {
+			System.out.println("CRF Gibbs sampling for the Hierarchical Dirichlet Processes");
+			System.out.println("The application nees the folowing params in exact order");
+			System.out.println("beta alpha gamma iterations saveLag inputFile outputDir initialNumberOfTOpics");
+			System.out.println("Example:");
+			System.out.println("HDP 0.5 1.5 1.0 2001 500 ./input.corpus ./outputdir/ 5");
+			System.exit(0);
+		}
+		
+		InstanceList training = InstanceList.load (new File(inputFile));
+		state.addInstances(training);
+		
+		System.out.println("sizeOfVocabulary="+state.sizeOfVocabulary);
+		System.out.println("totalNumberOfWords="+state.totalNumberOfWords);
+		System.out.println("NumberOfDocs="+state.docStates.length);
+
+		state.run(true, 10, iter, saveLag, System.out, 
+				new TopicsFileWriter(outputDir), new WordAssignmentsFileWriter(outputDir));
 	}
 
 			

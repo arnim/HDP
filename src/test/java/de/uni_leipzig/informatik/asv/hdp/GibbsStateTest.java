@@ -18,7 +18,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import de.uni_leipzig.informatik.asv.io.CLDACorpus;
 import de.uni_leipzig.informatik.asv.io.TopicsFileWriter;
 import de.uni_leipzig.informatik.asv.io.WordAssignmentsFileWriter;
 
@@ -65,7 +64,7 @@ public class GibbsStateTest {
 	public void testInitGibbsState() throws FileNotFoundException {
 		assertEquals(0, _state.sizeOfVocabulary);
 		assertNull(_state.docStates); 
-		_state.initGibbsState(_corpus);
+		_state.addInstances(_corpus);
 		assertEquals(1, _state.numberOfTopics); 
 		assertEquals(100, _state.sizeOfVocabulary); 
 		assertEquals(10, _state.docStates[10].docID); 
@@ -98,7 +97,7 @@ public class GibbsStateTest {
 	@Test
 	public void testWordCountByTableTableAssignments() {
 		for ( int i = 0; i <= 100; i++){
-			_state.initGibbsState(_corpus);
+			_state.addInstances(_corpus);
 			_testCONSISTENCY();
 		}
 	}
@@ -110,7 +109,7 @@ public class GibbsStateTest {
 		_state.numberOfTopics = 4;
 		_state.gamma = 1.0; 
 		_state.alpha = 1.0;
-		_state.initGibbsState(_corpus);
+		_state.addInstances(_corpus);
 		_state.run(true, 10, 1000, 4001, System.out, new TopicsFileWriter(_outputDir), new WordAssignmentsFileWriter(_outputDir));
 	}
 
