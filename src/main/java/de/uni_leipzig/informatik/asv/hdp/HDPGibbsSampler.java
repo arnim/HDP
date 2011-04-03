@@ -15,13 +15,9 @@ import java.util.List;
 import java.util.Random;
 
 import cc.mallet.types.FeatureSequence;
+import cc.mallet.types.IDSorter;
 import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
-
-import de.uni_leipzig.informatik.asv.io.TopicsFileWriter;
-import de.uni_leipzig.informatik.asv.io.TopicsWriter;
-import de.uni_leipzig.informatik.asv.io.WordAssignmentsFileWriter;
-import de.uni_leipzig.informatik.asv.io.WordAssignmentsWriter;
 
 /**
  * Hierarchical Dirichlet Processes  
@@ -57,6 +53,7 @@ public class HDPGibbsSampler {
 	protected int totalNumberOfWords;
 	protected int numberOfTopics = 1;
 	protected int totalNumberOfTables;
+	private InstanceList data;
 	
 
 	/**
@@ -65,6 +62,7 @@ public class HDPGibbsSampler {
 	 * @param corpus {@link Corpus} on which to fit the model
 	 */
 	public void addInstances(InstanceList corpus) {
+		this.data = corpus;
 		sizeOfVocabulary = corpus.getDataAlphabet().size();
 		totalNumberOfWords = 0;
 		docStates = new DOCState[corpus.size()];
@@ -96,7 +94,6 @@ public class HDPGibbsSampler {
 		} // the words in the remaining documents are now assigned too
 	}
 
-	
 	
 	/**
 	 * Step one step ahead
@@ -186,21 +183,17 @@ public class HDPGibbsSampler {
 	 * @param topicsWriter {@link TopicsWriter}
 	 * @throws IOException 
 	 */
-	public void run(boolean doShuffle, int shuffleLag, int maxIter, int saveLag, PrintStream log, TopicsWriter topicsWriter, WordAssignmentsWriter wordAssignmentsWriter) 
+	public void run(int shuffleLag, int maxIter, PrintStream log) 
 	throws IOException {
 		for (int iter = 0; iter < maxIter; iter++) {
-			if (doShuffle && (iter > 0) && (iter % shuffleLag == 0))
+			if ((shuffleLag > 0) && (iter > 0) && (iter % shuffleLag == 0))
 				doShuffle();
 			nextGibbsSweep();
 			log.println("iter = " + iter + " #topics = " + numberOfTopics + ", #tables = "
 					+ totalNumberOfTables );
-			if (saveLag != -1 && (iter > 0) && (iter % saveLag == 0)) 
-				saveState(iter, topicsWriter, wordAssignmentsWriter);
 		}
 	}
-	
-	
-	
+		
 	
 	/**
 	 * Removes a word from the bookkeeping
@@ -221,6 +214,8 @@ public class HDPGibbsSampler {
 			docState.tableToTopic[table] --; 
 		}
 	}
+	
+	
 	
 	/**
 	 * Add a word to the bookkeeping
@@ -252,6 +247,7 @@ public class HDPGibbsSampler {
 		}
 	}
 
+	
 	/**
 	 * Removes topics from the bookkeeping that have no words assigned to
 	 */
@@ -288,28 +284,97 @@ public class HDPGibbsSampler {
 	}
 	
 	
+	
 	/**
-	 * Writes the current topic and table assignments
+	 *  Outputs the topic composition of the documents
+	 *  Inspired by printDocumentTopics in mallet ParallelTopicModel
 	 * 
-	 * @param wordAssignmentsFileWriter 
-	 * @param topicsWriter 
-	 * @param iter 
-	 * @throws IOException 
+	 *  @param out         A {@link PrintStream}
+	 *  @param threshold   Only print topics with proportion greater than this parameter
+	 *  @param maxNumberOfTopics         Maximal number of topics to print
 	 */
-	protected void saveState(int iter, TopicsWriter topicsWriter, WordAssignmentsWriter wordAssignmentsWriter) throws IOException  {
-		topicsWriter.writeWordCountByTopicAndTerm(wordCountByTopicAndTerm, numberOfTopics, sizeOfVocabulary, iter);
-		wordAssignmentsWriter.openForIteration(iter);
-		int t, docID;
+	public void printDocumentTopics(PrintStream out, double threshold, int maxNumberOfTopics) {
+		out.println("#doc name topic proportion ...");
+		IDSorter[] sortedTopics = new IDSorter[numberOfTopics];
+		for (int k = 0; k < numberOfTopics; k++) 
+			sortedTopics[k] = new IDSorter(k, k);
+		if (maxNumberOfTopics <= 0 || maxNumberOfTopics > numberOfTopics) 
+			maxNumberOfTopics = numberOfTopics;
 		for (int d = 0; d < docStates.length; d++) {
-			DOCState docState = docStates[d];
-			docID = docState.docID;
-			for (int i = 0; i < docState.documentLength; i++) {
-				t = docState.words[i].tableAssignment;
-				wordAssignmentsWriter.writeAssignment(docID, docState.words[i].termIndex, docState.tableToTopic[t], t);
+			DOCState doc = docStates[d];
+			int[] topicCounts = new int[numberOfTopics];
+			out.print(d + "    ");
+			String source = "NA";
+			if (data.get(d).getSource() != null) 
+				source = data.get(d).getSource().toString(); 
+			out.print(source + "    ");
+			for (int i = 0; i < doc.documentLength; i++) 
+				topicCounts[doc.tableToTopic[doc.words[i].tableAssignment]]++;
+			for (int k = 0; k < numberOfTopics; k++) 
+				sortedTopics[k].set(k, topicCounts[k] / (doc.documentLength*1.0));
+			Arrays.sort(sortedTopics);
+			for (int k = 0; k < maxNumberOfTopics; k++) {
+				if (sortedTopics[k].getWeight() < threshold) { break; }
+				out.print(sortedTopics[k].getID() + "    " + 
+							   sortedTopics[k].getWeight() + "    ");
+			}
+			out.println();
+		}
+	}
+	
+	/**
+	 * Outputs the top words for each topic
+	 * 
+	 * @param out
+	 * @param maxNumberOfWords
+	 */
+	public void printTopicWords(PrintStream out, int maxNumberOfWords){
+		if (maxNumberOfWords <= 0 || maxNumberOfWords > sizeOfVocabulary) 
+			maxNumberOfWords = sizeOfVocabulary;
+		IDSorter[] sortedWords = new IDSorter[sizeOfVocabulary];
+		for (int v = 0; v < sizeOfVocabulary; v++) 
+			sortedWords[v] = new IDSorter(v, v);
+		for (int k = 0; k < numberOfTopics; k++) {
+			out.print(k + "    ");
+			for (int v = 0; v < sizeOfVocabulary; v++) 
+				sortedWords[v].set(v, wordCountByTopicAndTerm[k][v]);
+			Arrays.sort(sortedWords);
+			for (int v = 0; v < maxNumberOfWords; v++) {
+				out.print(data.getAlphabet().lookupObject(sortedWords[v].getID()) +"    ");
+			}
+			out.println();
+		}
+	}
+	
+	
+	/**
+	 * Outputs to a {@link PrintStream} the words in the corpus with their topic assignments
+	 * Inspired by printState in mallet ParallelTopicModel
+	 * 
+	 * @param out A {@link PrintStream}
+	 */
+	public void printState(PrintStream out) {
+		out.println ("#doc source pos typeindex type topic");
+		out.println("#alpha : " + alpha);
+		out.println("#beta : " + beta);
+		out.println("#gamma : " + gamma);
+		for (int d = 0; d < docStates.length; d++) {
+			String source = "NA";
+			if (data.get(d).getSource() != null) 
+				source = data.get(d).getSource().toString();
+			DOCState doc = docStates[d];
+			for (int i = 0; i < doc.documentLength; i++) {
+				int term = doc.words[i].termIndex; 
+				out.print(d + " ");
+				out.print(source + " "); 
+				out.print(i + " ");
+				out.print(term + " ");
+				out.print(data.getAlphabet().lookupObject(term) + " ");
+				out.println(doc.tableToTopic[doc.words[i].tableAssignment]);
 			}
 		}
-		wordAssignmentsWriter.closeIteration();
 	}
+	
 	
 	
 	class DOCState {
@@ -366,38 +431,37 @@ public class HDPGibbsSampler {
 	
 	
 	public static void main(String[] args) throws IOException {
-		 int saveLag = 0, iter = 0;
+		 int iter = 0;
 		 String inputFile = null, outputDir = null;
 		 HDPGibbsSampler state = new HDPGibbsSampler();
-		 
 		try {
 			state.beta = Double.parseDouble(args[0]);
 			state.alpha = Double.parseDouble(args[1]);
 			state.gamma = Double.parseDouble(args[2]);
 			iter = Integer.parseInt(args[3]);
-			saveLag = Integer.parseInt(args[4]);
-			inputFile = args[5];
+			inputFile = args[4];
+			state.numberOfTopics = Integer.parseInt(args[5]);
 			outputDir = args[6];
-			state.numberOfTopics = Integer.parseInt(args[7]);
 		} catch (Exception e) {
 			System.out.println("CRF Gibbs sampling for the Hierarchical Dirichlet Processes");
 			System.out.println("The application nees the folowing params in exact order");
-			System.out.println("beta alpha gamma iterations saveLag inputFile outputDir initialNumberOfTOpics");
+			System.out.println("beta alpha gamma iterations inputFile initialNumberOfTOpics outputDir");
 			System.out.println("Example:");
-			System.out.println("HDP 0.5 1.5 1.0 2001 500 ./input.corpus ./outputdir/ 5");
+			System.out.println("HDP 0.5 1.5 1.0 2000 ./topic-input.mallet 5 ./output/ ");
 			System.exit(0);
 		}
 		
-		InstanceList training = InstanceList.load (new File(inputFile));
-		state.addInstances(training);
+		
+		state.addInstances(InstanceList.load(new File(inputFile)));
 		
 		System.out.println("sizeOfVocabulary="+state.sizeOfVocabulary);
 		System.out.println("totalNumberOfWords="+state.totalNumberOfWords);
 		System.out.println("NumberOfDocs="+state.docStates.length);
 
-		state.run(true, 10, iter, saveLag, System.out, 
-				new TopicsFileWriter(outputDir), new WordAssignmentsFileWriter(outputDir));
+		state.run(0, iter, System.out);
+		state.printState(new PrintStream(new File(outputDir + "state.txt")));
+		state.printDocumentTopics(new PrintStream(new File(outputDir + "topics.txt")), 0.0001, 0);
+		state.printTopicWords(new PrintStream(new File(outputDir + "words.txt")), 10);
 	}
-
-			
+		
 }
