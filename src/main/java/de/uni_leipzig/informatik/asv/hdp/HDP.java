@@ -44,6 +44,7 @@ public class HDP {
 		
 		((CLDACorpus) corpus).read(inputFile);
 		state.initGibbsState(corpus);
+		corpus = null;
 		
 		System.out.println("sizeOfVocabulary="+state.sizeOfVocabulary);
 		System.out.println("totalNumberOfWords="+state.totalNumberOfWords);

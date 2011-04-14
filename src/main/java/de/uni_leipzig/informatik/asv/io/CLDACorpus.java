@@ -55,6 +55,8 @@ public class CLDACorpus extends ArrayList<Document> implements Corpus   {
 						String[] wordCounts = fields[n + 1].split(":");
 						word = Integer.parseInt(wordCounts[0]);
 						d.words[n] = word;
+						if (wordCounts[1].contains("\t#"))
+							wordCounts[1] = wordCounts[1].split("\t#")[0];
 						d.counts[n] = Integer.parseInt(wordCounts[1]);
 						d.total += Integer.parseInt(wordCounts[1]);
 						if (word >= sizeVocabulary)
