@@ -204,7 +204,7 @@ public class HDPGibbsSampler {
 		if (docState.wordCountByTable[table] == 0) { // table is removed
 			totalNumberOfTables--; 
 			numberOfTablesByTopic[k]--; 
-			docState.tableToTopic[table] --; 
+			docState.tableToTopic[table] = -1;
 		}
 	}
 	
